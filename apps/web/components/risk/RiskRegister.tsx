@@ -10,6 +10,7 @@ import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { ControlPicker } from "@/components/evidence/ControlPicker";
 import { getControl } from "@/lib/frameworks/catalog";
 import { recordVisit } from "@/lib/workspace/recentlyViewed";
+import { useSession } from "@/components/auth/SessionProvider";
 import {
   useCreateRisk,
   useDeleteRisk,
@@ -501,6 +502,7 @@ function RiskDetailModal({
   onClose: () => void;
 }) {
   const t = useTranslations("riskRegister");
+  const { user } = useSession();
   const likelihoodLabels = t.raw("likelihoodLabels") as string[];
   const impactLabels = t.raw("impactLabels") as string[];
   const { data: risk, isLoading, isError, isFetching } = useRisk(id);
@@ -512,14 +514,17 @@ function RiskDetailModal({
 
   useEffect(() => {
     if (!risk) return;
-    recordVisit({
-      id: risk.id,
-      type: "risk",
-      title: risk.title,
-      subtitle: risk.ownerName,
-      href: `/risk-register?open=${risk.id}`,
-    });
-  }, [risk]);
+    recordVisit(
+      {
+        id: risk.id,
+        type: "risk",
+        title: risk.title,
+        subtitle: risk.ownerName,
+        href: `/risk-register?open=${risk.id}`,
+      },
+      user.organizationId,
+    );
+  }, [risk, user.organizationId]);
 
   if (isError || (!risk && !isFetching)) {
     return (

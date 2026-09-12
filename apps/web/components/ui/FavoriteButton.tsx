@@ -3,6 +3,7 @@
 import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toggleFavorite, useIsFavorite, type FavoriteItem } from "@/lib/workspace/favorites";
+import { useSession } from "@/components/auth/SessionProvider";
 import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
@@ -16,6 +17,7 @@ interface FavoriteButtonProps {
  *  decorative-only `--gold` (DESIGN_SYSTEM.md's gold usage rule). */
 export function FavoriteButton({ item, className }: FavoriteButtonProps) {
   const t = useTranslations("workspace.favoriteButton");
+  const { user } = useSession();
   const isFavorite = useIsFavorite(item.type, item.id);
 
   return (
@@ -23,7 +25,7 @@ export function FavoriteButton({ item, className }: FavoriteButtonProps) {
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        toggleFavorite(item);
+        toggleFavorite(item, user.organizationId);
       }}
       aria-pressed={isFavorite}
       aria-label={isFavorite ? t("remove") : t("add")}

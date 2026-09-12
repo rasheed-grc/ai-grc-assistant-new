@@ -1,6 +1,7 @@
 "use client";
 
 import { createLocalListStore } from "@/lib/workspace/localListStore";
+import { useSession } from "@/components/auth/SessionProvider";
 
 const store = createLocalListStore<string>({
   storageKey: "sentinel-grc:recent-searches",
@@ -8,18 +9,23 @@ const store = createLocalListStore<string>({
   itemKey: (query) => query.toLowerCase(),
 });
 
-export function addRecentSearch(query: string) {
+/** `organizationId` scopes the search history to the organization active when it was
+ *  searched — callers get theirs from `useSession().user.organizationId`. */
+export function addRecentSearch(query: string, organizationId: string) {
   const trimmed = query.trim();
   if (trimmed.length < 2) return;
-  store.add(trimmed);
+  store.add(organizationId, trimmed);
 }
 
-export function removeRecentSearch(query: string) {
-  store.remove(query.toLowerCase());
+export function removeRecentSearch(query: string, organizationId: string) {
+  store.remove(organizationId, query.toLowerCase());
 }
 
-export function clearRecentSearches() {
-  store.clear();
+export function clearRecentSearches(organizationId: string) {
+  store.clear(organizationId);
 }
 
-export const useRecentSearches = store.useItems;
+export function useRecentSearches(): string[] {
+  const { user } = useSession();
+  return store.useItems(user.organizationId);
+}

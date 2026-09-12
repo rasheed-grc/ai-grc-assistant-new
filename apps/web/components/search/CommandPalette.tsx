@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 import { useGlobalSearch } from "@/lib/search/useGlobalSearch";
+import { useSession } from "@/components/auth/SessionProvider";
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -41,6 +42,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const tEntities = useTranslations("search.entities");
   const tActions = useTranslations("workspace.quickActions");
   const router = useRouter();
+  const { user } = useSession();
 
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -125,7 +127,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   if (!open) return null;
 
   function go(href: string) {
-    if (hasQuery) addRecentSearch(query);
+    if (hasQuery) addRecentSearch(query, user.organizationId);
     onClose();
     router.push(href);
   }
@@ -204,14 +206,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                   strokeWidth={2}
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeRecentSearch(q);
+                    removeRecentSearch(q, user.organizationId);
                   }}
                 />
               </button>
             ))}
             <button
               type="button"
-              onClick={() => clearRecentSearches()}
+              onClick={() => clearRecentSearches(user.organizationId)}
               className="ms-auto text-2xs font-medium text-foreground-muted transition-colors duration-150 hover:text-foreground-secondary"
             >
               {t("clearRecent")}

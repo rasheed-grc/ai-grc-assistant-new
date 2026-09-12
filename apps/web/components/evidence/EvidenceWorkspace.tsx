@@ -33,6 +33,7 @@ import { getControl } from "@/lib/frameworks/catalog";
 import { EVIDENCE_ACCEPT } from "@/lib/evidence/validation";
 import { currentVersion, type EvidenceSummary } from "@/lib/evidence/types";
 import { recordVisit } from "@/lib/workspace/recentlyViewed";
+import { useSession } from "@/components/auth/SessionProvider";
 import { cn, formatBytes, formatDate } from "@/lib/utils";
 
 interface Permissions {
@@ -434,6 +435,7 @@ function EvidenceDetailModal({
   onClose: () => void;
 }) {
   const t = useTranslations("evidenceWorkspace");
+  const { user } = useSession();
   const { data: evidence, isLoading, isError, isFetching } = useEvidenceItem(id);
   const addVersion = useAddEvidenceVersion();
   const updateEvidence = useUpdateEvidence();
@@ -443,14 +445,17 @@ function EvidenceDetailModal({
 
   useEffect(() => {
     if (!evidence) return;
-    recordVisit({
-      id: evidence.id,
-      type: "evidence",
-      title: evidence.title,
-      subtitle: currentVersion(evidence)?.fileName,
-      href: `/evidence?open=${evidence.id}`,
-    });
-  }, [evidence]);
+    recordVisit(
+      {
+        id: evidence.id,
+        type: "evidence",
+        title: evidence.title,
+        subtitle: currentVersion(evidence)?.fileName,
+        href: `/evidence?open=${evidence.id}`,
+      },
+      user.organizationId,
+    );
+  }, [evidence, user.organizationId]);
 
   async function onPickVersion(file: File | undefined) {
     if (!file) return;
