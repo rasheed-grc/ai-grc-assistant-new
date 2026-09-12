@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireSession } from "@/lib/auth/server";
+import { MissionCatalog } from "@/components/missions/MissionCatalog";
 import { MissionsList } from "@/components/missions/MissionsList";
 import { pageTitle } from "@/lib/pageMetadata";
 
@@ -13,8 +14,8 @@ export default async function MissionsPage() {
   const t = await getTranslations("missionsPage");
 
   return (
-    <div>
-      <header className="pb-7">
+    <div className="space-y-8">
+      <header>
         <p className="text-2xs font-medium uppercase tracking-wider text-foreground-muted">
           {t("eyebrow")}
         </p>
@@ -24,7 +25,15 @@ export default async function MissionsPage() {
         <p className="mt-1 max-w-2xl text-sm text-foreground-secondary">{t("description")}</p>
       </header>
 
-      <MissionsList />
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">{t("catalog.heading")}</h2>
+        <MissionCatalog />
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">{t("historyHeading")}</h2>
+        <MissionsList />
+      </section>
     </div>
   );
 }

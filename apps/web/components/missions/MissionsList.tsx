@@ -56,23 +56,32 @@ function MissionRow({ mission }: { mission: Mission }) {
   const t = useTranslations("missionsPage");
   const locale = useLocale() as AppLocale;
   return (
-    <tr className="border-b border-hairline last:border-0">
-      <td className="px-5 py-3">
-        {/* The mission TYPE is the headline — "Governance Plan", not an id. An unlabelled type
-            degrades to a readable identifier rather than throwing: mission types come from the
-            engine's catalog, which can grow without this interface knowing. */}
-        <p className="truncate font-medium text-foreground">
-          {labelOrIdentifier(t as (key: string) => string, "missionType", mission.type)}
-        </p>
-        {subjectOf(mission) && (
-          <p className="mt-0.5 truncate text-2xs text-foreground-muted">{subjectOf(mission)}</p>
-        )}
+    <tr className="border-b border-hairline transition-colors duration-150 last:border-0 hover:bg-surface-2/60">
+      <td className="p-0">
+        <Link href={`/missions/${mission.id}`} className="block px-5 py-3">
+          {/* The mission TYPE is the headline — "Governance Plan", not an id. An unlabelled type
+              degrades to a readable identifier rather than throwing: mission types come from the
+              engine's catalog, which can grow without this interface knowing. */}
+          <p className="truncate font-medium text-foreground">
+            {labelOrIdentifier(t as (key: string) => string, "missionType", mission.type)}
+          </p>
+          {subjectOf(mission) && (
+            <p className="mt-0.5 truncate text-2xs text-foreground-muted">{subjectOf(mission)}</p>
+          )}
+        </Link>
       </td>
-      <td className="px-3 py-3">
-        <StatusBadge status={mission.status} awaitingApproval={mission.awaitingApproval} />
+      <td className="p-0">
+        <Link href={`/missions/${mission.id}`} className="block px-3 py-3">
+          <StatusBadge status={mission.status} awaitingApproval={mission.awaitingApproval} />
+        </Link>
       </td>
-      <td className="px-3 py-3 text-foreground-secondary">
-        {formatRelativeTime(mission.updatedAt, locale)}
+      <td className="p-0">
+        <Link
+          href={`/missions/${mission.id}`}
+          className="block px-3 py-3 text-foreground-secondary"
+        >
+          {formatRelativeTime(mission.updatedAt, locale)}
+        </Link>
       </td>
     </tr>
   );

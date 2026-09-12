@@ -42,3 +42,96 @@ export interface Mission {
   createdAt: string;
   updatedAt: string;
 }
+
+/** The Mission types this workspace lets a user start directly, from a catalog of cards — as
+ * opposed to types like `generate_governance_plan` that start their own way (the Discovery
+ * interview) or `simple_question` (the AI Assistant chat). Adding a type here is a UI-only change:
+ * the type must already be one grc-api's `default_mission_catalog()` registers, and its plan
+ * factory must already read its subject from the single `scope` string `POST /v1/missions` sends
+ * (every built-in composite mission does — `MissionDefinitionProvider.define` always maps the
+ * catalog's one free-text `request` input from it). */
+export const STARTABLE_MISSION_TYPES = ["gap_assessment", "risk_assessment"] as const;
+export type StartableMissionType = (typeof STARTABLE_MISSION_TYPES)[number];
+
+export function isStartableMissionType(value: string): value is StartableMissionType {
+  return (STARTABLE_MISSION_TYPES as readonly string[]).includes(value);
+}
+
+/** One step of the mission's plan, exactly as `MissionDetailView.plan` projects it — an id and the
+ * human-readable description authored on the Mission type's plan factory (never a tool name). */
+export interface MissionPlanStep {
+  id: string;
+  description: string;
+}
+
+/** One step's real output once it has run. `findings[i]` corresponds to `plan[i]` — the engine
+ * records them in step order, so their shared index is how the UI knows which step a finding
+ * belongs to without the backend repeating a redundant step id on both sides. */
+export interface MissionFinding {
+  stepId: string;
+  title: string;
+  summary: string;
+  citations: string[];
+  confidence: number | null;
+}
+
+/** The full Mission — plan + progress — for the review station and the run/progress view. */
+export interface MissionDetail {
+  id: string;
+  type: string;
+  scope: string;
+  status: MissionStatus;
+  plan: MissionPlanStep[];
+  findings: MissionFinding[];
+  awaitingApproval: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** The response to creating a mission — the "review station": what was created, and how big it
+ * is, before anyone runs it (CLAUDE.md's AI Transparency pillar — what will run, shown first). */
+export interface CreatedMission {
+  mission: MissionDetail;
+  steps: number;
+  humanApprovals: number;
+}
+
+// --- Result (the engine calls it a Deliverable; the product never uses that word) -------------
+
+export interface ResultSection {
+  heading: string;
+  body: string;
+  citations: string[];
+  confidence: number | null;
+}
+
+export interface GapRow {
+  controlCode: string;
+  controlTitle: string;
+  covered: boolean;
+  evidence: string[];
+}
+
+export interface Coverage {
+  framework: string;
+  coverage: number;
+  coveredCount: number;
+  total: number;
+  gaps: GapRow[];
+}
+
+/** `humanReview` mirrors the engine's own words exactly ("Not required" | "Pending" | "Approved" |
+ * "Rejected") — none of `gap_assessment`/`risk_assessment`'s steps are consequential, so a real
+ * mission through this UI always reads "Not required"; the other values are real regardless the
+ * moment a Mission type with a human gate is added to the catalog above. */
+export interface MissionResult {
+  missionId: string;
+  title: string;
+  evidenceCount: number;
+  humanReview: string;
+  updatedAt: string;
+  sections: ResultSection[];
+  /** Present only for `kind === "gap_assessment"` — the coverage/gaps table `GenericContent`
+   * (every other mission type today) does not carry. */
+  coverage: Coverage | null;
+}

@@ -2103,6 +2103,61 @@
       "iso_controls": "ISO Controls",
       "vendor_review": "Vendor Review",
       "simple_question": "AI GRC Assistant"
+    },
+    "historyHeading": "History",
+    "catalog": {
+      "heading": "Start a mission",
+      "whyLabel": "Why use it",
+      "needsLabel": "What it needs",
+      "startButton": "Start",
+      "scopeLabel": "What should this mission assess?",
+      "scopeRequired": "Tell the mission what to assess.",
+      "startError": "Couldn't start this mission right now. Please try again.",
+      "modal": {
+        "description": "This creates and plans the mission — it reviews what it will do before anything runs.",
+        "cancel": "Cancel",
+        "submit": "Create mission"
+      },
+      "gap_assessment": {
+        "name": "Gap Assessment",
+        "description": "Assess which ISO 27001 controls for a scope are covered by your own evidence and which are gaps.",
+        "why": "See exactly which controls you can already prove, and which ones still need evidence, before an auditor or a customer asks.",
+        "needs": "Works best with relevant evidence already uploaded in Documents (e.g. policies, procedures) — it searches your organization's own ingested evidence automatically.",
+        "scopePlaceholder": "e.g. Access control, Cryptography, Vendor management"
+      },
+      "risk_assessment": {
+        "name": "Risk Assessment",
+        "description": "Assess the risk of a subject — an asset, vendor, system, or scenario — grounded in your own evidence.",
+        "why": "Turn a vague worry (\"is this vendor risky?\") into a documented likelihood/impact assessment with real gaps called out.",
+        "needs": "Works best with relevant evidence already uploaded in Documents about the subject — it searches your organization's own ingested evidence automatically.",
+        "scopePlaceholder": "e.g. Vendor Acme Corp, Production database, Remote access policy"
+      }
+    },
+    "detail": {
+      "reviewNotice": "This mission is planned and ready — {count, plural, one {it will run # step} other {it will run # steps}}. Nothing has run yet.",
+      "executeButton": "Execute",
+      "executeError": "Couldn't start this mission right now. Please try again.",
+      "planHeading": "Plan",
+      "planSubtitleReview": "What this mission will do, in order.",
+      "planSubtitleRunning": "Running now — this updates automatically.",
+      "planSubtitleDone": "What this mission did, in order.",
+      "failedTitle": "This mission failed",
+      "failedBody": "No result was produced — nothing below was fabricated to fill the gap. Check the steps above for what happened before it stopped.",
+      "resultHeading": "Result",
+      "resultLoading": "Loading the result…",
+      "resultLoadError": "Couldn't load the result right now.",
+      "trust": {
+        "evidence": "{count, plural, one {# evidence citation} other {# evidence citations}}",
+        "humanReview": "Human review"
+      },
+      "coverage": {
+        "title": "Coverage — {framework}",
+        "control": "Control",
+        "status": "Status",
+        "covered": "Covered",
+        "gap": "Gap"
+      },
+      "citations": "Sources"
     }
   },
   "helpPage": {
