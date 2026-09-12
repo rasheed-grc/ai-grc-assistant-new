@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx tests/eval/planLabels.eval.ts && tsx tests/eval/planItemTitleLocale.eval.ts && tsx tests/eval/missionSubject.eval.ts && tsx tests/eval/arabicAnalysis.eval.ts && tsx tests/eval/policyIntelligence.eval.ts && tsx tests/eval/accessOnboarding.eval.ts && tsx tests/eval/analysisQuota.eval.ts && tsx tests/eval/teamInvitation.eval.ts",
+    "test": "tsx tests/eval/planLabels.eval.ts && tsx tests/eval/planItemTitleLocale.eval.ts && tsx tests/eval/missionSubject.eval.ts && tsx tests/eval/arabicAnalysis.eval.ts && tsx tests/eval/policyRecommendations.eval.ts && tsx tests/eval/accessOnboarding.eval.ts && tsx tests/eval/analysisQuota.eval.ts && tsx tests/eval/teamInvitation.eval.ts",
     "db:migrate": "node scripts/db-migrate.mjs",
     "db:migrate-data": "node scripts/migrate-file-data.mjs",
     "db:create-admin": "node scripts/create-admin.mjs"
