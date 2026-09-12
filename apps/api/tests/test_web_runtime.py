@@ -1,4 +1,5 @@
-"""Tests for the Policy Intelligence wiring against apps/web's live Postgres (web_runtime.py).
+"""Tests for the shared web_runtime.py wiring against apps/web's live Postgres (Policies,
+Knowledge Worker, Regulation Review).
 
 Integration tests need a real database (same convention as packages/persistence-web):
 point TEST_DATABASE_URL/DATABASE_URL at one with apps/web's migrations applied, or they skip.
@@ -17,7 +18,6 @@ from grc_api.web_runtime import (
     close_web_database,
     get_policy_mission_store,
     get_policy_repository,
-    get_tool_registry,
     get_web_database,
 )
 
@@ -37,10 +37,10 @@ def _database_url() -> str | None:
     return None
 
 
-async def test_get_tool_registry_raises_when_database_url_unset() -> None:
+async def test_get_web_database_raises_when_database_url_unset() -> None:
     app = create_app(Settings(app_env="testing", database_url=""))
     with pytest.raises(WebRuntimeNotConfiguredError):
-        await get_tool_registry(app, "")
+        await get_web_database(app, "")
 
 
 async def test_get_web_database_is_memoized_on_app_state() -> None:
@@ -58,16 +58,12 @@ async def test_get_web_database_is_memoized_on_app_state() -> None:
         await close_web_database(app)
 
 
-async def test_tool_registry_and_repositories_share_the_same_database() -> None:
+async def test_repositories_share_the_same_database() -> None:
     url = _database_url()
     if not url:
         pytest.skip("no TEST_DATABASE_URL/DATABASE_URL configured")
     app = create_app(Settings(app_env="testing", database_url=url))
     try:
-        registry = await get_tool_registry(app, url)
-        again = await get_tool_registry(app, url)
-        assert registry is again
-
         policy_repository = await get_policy_repository(app, url)
         mission_store = await get_policy_mission_store(app, url)
         assert policy_repository is not None

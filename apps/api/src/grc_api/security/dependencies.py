@@ -28,12 +28,9 @@ from grc_persistence_web import (
     WorkerEventRepository,
     WorkerRunHistoryRepository,
 )
-from grc_policy_analyst import PolicyAnalystAgent
-from grc_policy_hunter import PolicyHunterAgent
 from grc_services.shared.authorization import AuthorizationService
 from grc_services.shared.bus import CommandBus, QueryBus
 from grc_services.shared.context import ExecutionContext, Principal
-from grc_tools import ToolRegistry
 
 from ..container import AppContainer
 from ..middleware.errors import AuthenticationError
@@ -45,7 +42,6 @@ from ..web_runtime import (
     get_regulation_section_repository,
     get_regulation_source_repository,
     get_regulation_source_version_repository,
-    get_tool_registry,
     get_web_knowledge_item_repository,
     get_worker_control_repository,
     get_worker_event_repository,
@@ -119,15 +115,9 @@ def get_embedding_model(
     return container.embedding_model
 
 
-# ---- Policy Intelligence: wired against apps/web's live Postgres, not the gated store_backend
-# above (see web_runtime.py for why this connection is created lazily per-request). ----
-async def get_web_tool_registry(
-    request: Request,
-    container: Annotated[AppContainer, Depends(get_container)],
-) -> ToolRegistry:
-    return await get_tool_registry(request.app, container.settings.database_url)
-
-
+# ---- Policies/Knowledge Worker/Regulation Review: wired against apps/web's live Postgres,
+# not the gated store_backend above (see web_runtime.py for why this connection is created
+# lazily per-request). ----
 async def get_web_policy_repository(
     request: Request,
     container: Annotated[AppContainer, Depends(get_container)],
@@ -200,18 +190,6 @@ async def get_web_regulation_section_repository(
     return await get_regulation_section_repository(request.app, container.settings.database_url)
 
 
-async def get_policy_hunter_agent(
-    registry: Annotated[ToolRegistry, Depends(get_web_tool_registry)],
-) -> PolicyHunterAgent:
-    return PolicyHunterAgent(registry)
-
-
-async def get_policy_analyst_agent(
-    registry: Annotated[ToolRegistry, Depends(get_web_tool_registry)],
-) -> PolicyAnalystAgent:
-    return PolicyAnalystAgent(registry)
-
-
 # Convenience aliases for concise router signatures.
 CurrentPrincipal = Annotated[Principal, Depends(get_principal)]
 Context = Annotated[ExecutionContext, Depends(get_execution_context)]
@@ -220,11 +198,8 @@ Queries = Annotated[QueryBus, Depends(get_query_bus)]
 OrchestratorDep = Annotated[Orchestrator, Depends(get_orchestrator)]
 Authz = Annotated[AuthorizationService, Depends(get_authz)]
 EmbeddingModelDep = Annotated[EmbeddingModel, Depends(get_embedding_model)]
-WebToolRegistry = Annotated[ToolRegistry, Depends(get_web_tool_registry)]
 WebPolicyRepository = Annotated[PolicyRepository, Depends(get_web_policy_repository)]
 WebPolicyMissionStore = Annotated[PolicyMissionStore, Depends(get_web_policy_mission_store)]
-PolicyHunterAgentDep = Annotated[PolicyHunterAgent, Depends(get_policy_hunter_agent)]
-PolicyAnalystAgentDep = Annotated[PolicyAnalystAgent, Depends(get_policy_analyst_agent)]
 WebWorkerControlRepository = Annotated[
     WorkerControlRepository, Depends(get_web_worker_control_repository)
 ]
