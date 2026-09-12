@@ -2310,5 +2310,27 @@
     "schedule_org_structure_review": "جدولة مراجعة الهيكل التنظيمي",
     "schedule_policy_review": "جدولة مراجعة السياسات",
     "schedule_risk_register_review": "جدولة مراجعة سجل المخاطر"
+  },
+  "settingsWorkspace": {
+    "tabs": {
+      "profile": "الملف الشخصي",
+      "security": "الأمان",
+      "organization": "المنشأة",
+      "team": "الفريق"
+    },
+    "readOnlyBadge": "(للعرض فقط)"
+  },
+  "organizationSettings": {
+    "title": "بيانات المنشأة",
+    "subtitleEditable": "مرئية لكل فريقك. يمكن للمالكين والمشرفين فقط تعديلها.",
+    "subtitleReadOnly": "مرئية لكل فريقك. يمكن للمالكين والمشرفين فقط تعديلها.",
+    "nameLabel": "اسم المنشأة",
+    "typeLabel": "نوع المنشأة",
+    "industryLabel": "القطاع / النشاط",
+    "save": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ…",
+    "loading": "جارٍ تحميل بيانات المنشأة…",
+    "loadError": "حدث خطأ أثناء تحميل بيانات المنشأة. حاول مرة أخرى.",
+    "genericError": "حدث خطأ ما. حاول مرة أخرى."
   }
 }

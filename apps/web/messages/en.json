@@ -2310,5 +2310,27 @@
     "schedule_org_structure_review": "Schedule Org Structure Review",
     "schedule_policy_review": "Schedule Policy Review",
     "schedule_risk_register_review": "Schedule Risk Register Review"
+  },
+  "settingsWorkspace": {
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "organization": "Organization",
+      "team": "Team"
+    },
+    "readOnlyBadge": "(read-only)"
+  },
+  "organizationSettings": {
+    "title": "Organization details",
+    "subtitleEditable": "Visible to your whole team. Only owners and admins can change these.",
+    "subtitleReadOnly": "Visible to your whole team. Only owners and admins can change these.",
+    "nameLabel": "Organization name",
+    "typeLabel": "Organization type",
+    "industryLabel": "Industry / activity",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "loading": "Loading organization details…",
+    "loadError": "Something went wrong loading organization details. Please try again.",
+    "genericError": "Something went wrong. Please try again."
   }
 }

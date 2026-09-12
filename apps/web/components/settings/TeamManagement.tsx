@@ -6,6 +6,7 @@ import { Check, Copy, Loader2, Mail, Plus, TriangleAlert, UserRound } from "luci
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { useSession } from "@/components/auth/SessionProvider";
 import { useInviteTeamMember, useOrganizationTeam } from "@/hooks/useOrganizations";
 import { INVITED_ROLES, type InvitedRole } from "@/lib/invitations/types";
 import { cn, formatDate } from "@/lib/utils";
@@ -21,6 +22,8 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 export function TeamManagement() {
   const t = useTranslations("teamManagement");
+  const { hasRole } = useSession();
+  const canInvite = hasRole("owner", "admin");
   const { data, isLoading, isError } = useOrganizationTeam();
   const [inviting, setInviting] = useState(false);
 
@@ -34,14 +37,16 @@ export function TeamManagement() {
           </h2>
           <p className="mt-0.5 text-xs text-foreground-secondary">{t("subtitle")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setInviting(true)}
-          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-sm font-medium text-white shadow-glow transition-opacity duration-150 hover:opacity-90 active:scale-[0.98]"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2} />
-          {t("inviteButton")}
-        </button>
+        {canInvite && (
+          <button
+            type="button"
+            onClick={() => setInviting(true)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-sm font-medium text-white shadow-glow transition-opacity duration-150 hover:opacity-90 active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            {t("inviteButton")}
+          </button>
+        )}
       </div>
 
       {isLoading ? (

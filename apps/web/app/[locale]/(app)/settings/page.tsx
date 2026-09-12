@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import { pageTitle } from "@/lib/pageMetadata";
 import { getTranslations } from "next-intl/server";
-import { requireRoles } from "@/lib/auth/server";
-import { TeamManagement } from "@/components/settings/TeamManagement";
+import { requireSession } from "@/lib/auth/server";
+import { SettingsWorkspace } from "@/components/settings/SettingsWorkspace";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageTitle("placeholders.settings.title");
 }
 
-// Workspace administration is restricted to owners and admins (server-enforced RBAC).
+// Every authenticated user can open Settings — Profile and Security are self-service for anyone;
+// the Organization and Team tabs stay visible to everyone (any member may see who has access and
+// what the organization is) but their write actions are owner/admin-gated inside the tab itself,
+// enforced again server-side by the underlying services (organizations/service.ts).
 export default async function SettingsPage() {
-  await requireRoles("owner", "admin");
+  await requireSession();
   const t = await getTranslations("placeholders.settings");
 
   return (
@@ -25,7 +28,7 @@ export default async function SettingsPage() {
         <p className="mt-1 max-w-2xl text-sm text-foreground-secondary">{t("description")}</p>
       </header>
 
-      <TeamManagement />
+      <SettingsWorkspace />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 /** Browser-side organizations API client. */
 
 import type { InvitedRole } from "@/lib/invitations/types";
-import type { OrganizationMembership, OrganizationTeam } from "./types";
+import type { Organization, OrganizationMembership, OrganizationTeam } from "./types";
 
 async function parseError(response: Response): Promise<string> {
   const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -32,6 +32,23 @@ export async function createOrganization(input: CreateOrganizationInput): Promis
     body: JSON.stringify(input),
   });
   if (!response.ok) throw new Error(await parseError(response));
+}
+
+export interface UpdateOrganizationInput {
+  name?: string;
+  orgType?: string;
+  industry?: string;
+}
+
+export async function updateOrganization(input: UpdateOrganizationInput): Promise<Organization> {
+  const response = await fetch("/api/organizations", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  const data = (await response.json()) as { organization: Organization };
+  return data.organization;
 }
 
 export async function switchOrganization(organizationId: string): Promise<void> {

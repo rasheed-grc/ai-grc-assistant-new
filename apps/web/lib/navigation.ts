@@ -152,8 +152,7 @@ export const FOOTER_NAV: NavLink[] = [
     icon: UserCheck,
     requiredRoles: ["owner", "admin"],
   },
-  // Team management and workspace administration are both restricted to owners and admins
-  // (matches each page's own server guard).
+  // Team management is restricted to owners and admins (matches the page's own server guard).
   {
     label: "Team",
     labelKey: "team",
@@ -161,12 +160,14 @@ export const FOOTER_NAV: NavLink[] = [
     icon: Users,
     requiredRoles: ["owner", "admin"],
   },
+  // Settings is open to every signed-in role — Profile and Security are self-service for
+  // anyone, and the page's own Organization/Team tabs gate their write actions internally
+  // (matches the page's own server guard, which only requires a session, not a role).
   {
     label: "Settings",
     labelKey: "settings",
     href: "/settings",
     icon: Settings,
-    requiredRoles: ["owner", "admin"],
   },
   { label: "Help & Support", labelKey: "help", href: "/help", icon: LifeBuoy },
 ];
