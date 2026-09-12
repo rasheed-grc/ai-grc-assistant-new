@@ -4,6 +4,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { formatReportTimestamp } from "./format";
 import type { Report, ReportTable } from "./types";
 
 const PAGE_W = 595.28;
@@ -64,7 +65,7 @@ export async function renderReportPdf(report: Report): Promise<Buffer> {
     MUTED,
   );
   y -= 12;
-  write(`Generated ${new Date(report.generatedAt).toUTCString()}`, MARGIN, 9, font, MUTED);
+  write(`Generated ${formatReportTimestamp(report.generatedAt, "en")}`, MARGIN, 9, font, MUTED);
   y -= 18;
   page.drawLine({
     start: { x: MARGIN, y },
@@ -132,15 +133,39 @@ export async function renderReportPdf(report: Report): Promise<Buffer> {
     }
   };
 
+  // Wraps a paragraph of text to `maxW`, splitting on existing newlines first — narratives like
+  // "Next steps" carry a numbered list as literal `\n`-separated lines that must stay separate.
+  const wrapLines = (value: string, f: PDFFont, size: number, maxW: number): string[] => {
+    const out: string[] = [];
+    for (const paragraph of value.split("\n")) {
+      const words = paragraph.split(" ");
+      let current = "";
+      for (const word of words) {
+        const candidate = current ? `${current} ${word}` : word;
+        if (f.widthOfTextAtSize(candidate, size) > maxW && current) {
+          out.push(current);
+          current = word;
+        } else {
+          current = candidate;
+        }
+      }
+      out.push(current);
+    }
+    return out;
+  };
+
   // Sections
   for (const section of report.sections) {
     ensure(34);
     write(section.heading, MARGIN, 13, bold);
     y -= 18;
     if (section.narrative) {
-      ensure(16);
-      write(truncate(section.narrative, font, 10, CONTENT_W), MARGIN, 10, font, MUTED);
-      y -= 16;
+      for (const narrativeLine of wrapLines(section.narrative, font, 10, CONTENT_W)) {
+        ensure(14);
+        write(narrativeLine, MARGIN, 10, font, MUTED);
+        y -= 14;
+      }
+      y -= 2;
     }
     if (section.table) drawTable(section.table);
     y -= 16;

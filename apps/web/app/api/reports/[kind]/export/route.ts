@@ -36,7 +36,8 @@ export async function GET(request: Request, { params }: RouteContext): Promise<N
     // broken export. The on-screen preview and the Excel export are fully localized.
     const locale = format === "pdf" ? "en" : await getRequestLocale();
     const report = await buildReport(actor, kind as ReportKind, locale);
-    const bytes = format === "pdf" ? await renderReportPdf(report) : await renderReportXlsx(report);
+    const bytes =
+      format === "pdf" ? await renderReportPdf(report) : await renderReportXlsx(report, locale);
     const date = new Date().toISOString().slice(0, 10);
     const fileName = `${kind}-report-${date}.${format}`;
 
