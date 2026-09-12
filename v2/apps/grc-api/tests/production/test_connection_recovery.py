@@ -36,11 +36,21 @@ def _terminate_every_backend(observer: psycopg.Connection) -> int:
     model itself, outside the pool, with no application name — so a targeted kill spared exactly
     the connection under test and the suite passed against the broken code. A test that cannot fail
     for the original reason is not a regression test.
+
+    Skips, rather than fails, when the connecting role cannot terminate backends at all (e.g. a
+    managed/pooled Postgres such as Supabase, where the app role is deliberately not SUPERUSER and
+    cannot signal other backends — including its own pooler's superuser-owned connections). That is
+    an environment fact about *this* database, exactly like "no reachable PostgreSQL" in
+    `conftest.connect` — this suite's whole regression only shows up where the role can actually
+    induce the failure it recovers from (e.g. a local/self-hosted Postgres with a superuser role).
     """
-    rows = observer.execute(
-        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-        "WHERE datname = current_database() AND pid <> pg_backend_pid()"
-    ).fetchall()
+    try:
+        rows = observer.execute(
+            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+            "WHERE datname = current_database() AND pid <> pg_backend_pid()"
+        ).fetchall()
+    except psycopg.errors.InsufficientPrivilege as exc:
+        pytest.skip(f"this role cannot terminate backends on this database ({exc})")
     return len(rows)
 
 
