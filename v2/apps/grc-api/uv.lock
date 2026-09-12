@@ -644,6 +644,7 @@ dependencies = [
     { name = "governance-session" },
     { name = "governance-store", extra = ["postgres"] },
     { name = "knowledge-runtime" },
+    { name = "llm-tools" },
     { name = "mission-application" },
     { name = "mission-engine" },
     { name = "mission-read-model" },
@@ -654,6 +655,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-multipart" },
+    { name = "search-tools" },
     { name = "tool-registry" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -681,6 +683,7 @@ requires-dist = [
     { name = "governance-session", editable = "../../packages/governance-session" },
     { name = "governance-store", extras = ["postgres"], editable = "../../packages/governance-store" },
     { name = "knowledge-runtime", editable = "../../packages/knowledge-runtime" },
+    { name = "llm-tools", editable = "../../packages/llm-tools" },
     { name = "mission-application", editable = "../../packages/mission-application" },
     { name = "mission-engine", editable = "../../packages/mission-engine" },
     { name = "mission-read-model", editable = "../../packages/mission-read-model" },
@@ -691,6 +694,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.9.0" },
     { name = "pydantic-settings", specifier = ">=2.5.0" },
     { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "search-tools", editable = "../../packages/search-tools" },
     { name = "tool-registry", editable = "../../packages/tool-registry" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30.0" },
 ]
@@ -910,6 +914,30 @@ requires-dist = [
 dev = [
     { name = "pytest", specifier = ">=8.3.0" },
     { name = "search-tools", editable = "../../packages/search-tools" },
+]
+
+[[package]]
+name = "llm-tools"
+version = "0.1.0"
+source = { editable = "../../packages/llm-tools" }
+dependencies = [
+    { name = "pipeline-contracts" },
+    { name = "tool-registry" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pipeline-contracts", editable = "../../packages/pipeline-contracts" },
+    { name = "tool-registry", editable = "../../packages/tool-registry" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "event-bus", editable = "../../packages/event-bus" },
+    { name = "generation-engine", editable = "../../packages/generation-engine" },
+    { name = "mission-engine", editable = "../../packages/mission-engine" },
+    { name = "pipeline-tool", editable = "../../packages/pipeline-tool" },
+    { name = "pytest", specifier = ">=8.3.0" },
 ]
 
 [[package]]
@@ -1616,6 +1644,32 @@ dev = [
     { name = "numpy", specifier = ">=2.1.0" },
     { name = "pgvector", specifier = ">=0.3.6" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
+    { name = "pytest", specifier = ">=8.3.0" },
+]
+
+[[package]]
+name = "search-tools"
+version = "0.1.0"
+source = { editable = "../../packages/search-tools" }
+dependencies = [
+    { name = "pipeline-contracts" },
+    { name = "retrieval-engine" },
+    { name = "tool-registry" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pipeline-contracts", editable = "../../packages/pipeline-contracts" },
+    { name = "retrieval-engine", editable = "../../packages/retrieval-engine" },
+    { name = "tool-registry", editable = "../../packages/tool-registry" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "event-bus", editable = "../../packages/event-bus" },
+    { name = "mission-engine", editable = "../../packages/mission-engine" },
+    { name = "numpy", specifier = ">=1.26" },
+    { name = "pipeline-tool", editable = "../../packages/pipeline-tool" },
     { name = "pytest", specifier = ">=8.3.0" },
 ]
 

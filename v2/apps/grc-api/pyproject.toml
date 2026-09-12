@@ -31,6 +31,11 @@ dependencies = [
     "governance-plan-tools",
     "pipeline-tool",
     "tool-registry",
+    # The general-purpose tools gap_assessment/risk_assessment/iso_controls/policy_generator/
+    # vendor_review resolve their steps to (grc_api/execution.py) — the SAME production path as
+    # the three above, for the same reason: real tools now run for real, not just under test.
+    "search-tools",
+    "llm-tools",
     # BOTH vendor SDKs, because the two LLM roles are deliberately served by different vendors
     # (see grc_api/llm_provider.py): `claude` for the governance role — sector knowledge and plan
     # drafting — and `openai` for the technical tier. The adapters keep their SDKs optional, so a
@@ -76,6 +81,8 @@ governance-plan-execution = { path = "../../packages/governance-plan-execution",
 governance-plan-tools = { path = "../../packages/governance-plan-tools", editable = true }
 pipeline-tool = { path = "../../packages/pipeline-tool", editable = true }
 tool-registry = { path = "../../packages/tool-registry", editable = true }
+search-tools = { path = "../../packages/search-tools", editable = true }
+llm-tools = { path = "../../packages/llm-tools", editable = true }
 generation-engine = { path = "../../packages/generation-engine", editable = true }
 
 # These ship no py.typed; consume them as untyped imports (our own code stays strict).
