@@ -21,6 +21,17 @@
       "port": 8000
     },
     {
+      "name": "governance-api-dev",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "--directory", "v2/apps/grc-api",
+        "--env-file", "../../../.env",
+        "uvicorn", "grc_api.app:create_app", "--factory", "--port", "8010"
+      ],
+      "port": 8010
+    },
+    {
       "name": "worker-dev",
       "runtimeExecutable": "uv",
       "runtimeArgs": ["run", "python", "-m", "grc_worker.knowledge_learning_loop"],
