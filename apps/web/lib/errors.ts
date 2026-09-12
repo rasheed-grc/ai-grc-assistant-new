@@ -49,7 +49,7 @@ export class ConflictError extends AppError {
  * `unreachable` distinguishes "could not even connect" (e.g. `apps/api` isn't deployed in this
  * environment — see `NEXT_PUBLIC_API_BASE_URL`) from "connected but the backend returned an
  * error." Every `lib/*\/service.ts` module that proxies to `apps/api` (`regulationReview`,
- * `knowledgeWorker`, `policyIntelligence`) follows the same `call<X>Api` helper shape: a fetch
+ * `knowledgeWorker`) follows the same `call<X>Api` helper shape: a fetch
  * failure throws `new UpstreamError(message, true)`.
  *
  * **Graceful-degradation policy** (apply this consistently to any new proxy call site):

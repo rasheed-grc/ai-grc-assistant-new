@@ -71,6 +71,14 @@ export function PlanItemCard({ item }: PlanItemCardProps) {
   // namespace-qualified key rather than throwing, and `planSeed.foo` on a customer's screen is
   // worse than the English the plan already stored.
   const seed = useTranslations("planSeed");
+  // Same `has`-guarded pattern for traceability: `item.sourceSignalKeys` is Discovery's internal
+  // signal vocabulary, not question text. Only keys with a known `discovery.question.<key>` label
+  // resolve to something shown — an unrecognized key (e.g. a sector-pack signal with no fixed
+  // label) is dropped rather than ever rendering raw jargon.
+  const discovery = useTranslations("discovery");
+  const sourceLabels = item.sourceSignalKeys
+    .filter((key) => discovery.has(`question.${key}` as never))
+    .map((key) => discovery(`question.${key}` as never));
   const [expanded, setExpanded] = useState(true);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -148,6 +156,20 @@ export function PlanItemCard({ item }: PlanItemCardProps) {
           <DetailRow label={t("item.why")} value={item.rationale} />
           <DetailRow label={t("item.expectedOutcome")} value={item.expectedOutcome} />
           {item.riskIfSkipped && <DetailRow label={t("item.ifIgnored")} value={item.riskIfSkipped} tone="danger" />}
+          {sourceLabels.length > 0 && (
+            <div>
+              <p className="text-2xs font-medium uppercase tracking-wider text-foreground-muted">
+                {t("item.source")}
+              </p>
+              <ul className="mt-1 space-y-1">
+                {sourceLabels.map((label) => (
+                  <li key={label} className="text-sm leading-relaxed text-foreground-secondary">
+                    &ldquo;{label}&rdquo;
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <div className="flex items-center gap-2">

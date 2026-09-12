@@ -14,8 +14,15 @@ from pydantic import BaseModel
 
 
 class PlanItemView(BaseModel):
-    """One trackable unit of the plan. `resolves_signal`/`source_signal_keys` stay internal — the
-    UI never needs the Signal vocabulary (ADR 0066 "never show technical jargon")."""
+    """One trackable unit of the plan. `resolves_signal` stays internal (it names the applicability
+    signal this item's *completion* would resolve, not where it came from — no client need).
+    `source_signal_keys` IS now sent: it is the traceability link back to the specific Discovery
+    question(s) that produced this item ("Governance Question → Answer → Task", per the product
+    brief). The keys themselves are internal engine vocabulary, so the client is responsible for
+    translating each one through its own question-label catalog (`discovery.question.<key>`) and
+    silently dropping any key it doesn't recognize — raw jargon must never reach the screen, only
+    the resolved question text (ADR 0066 "never show technical jargon" still holds; only the layer
+    doing the resolving moved)."""
 
     id: str
     plan_id: str
@@ -40,6 +47,7 @@ class PlanItemView(BaseModel):
     is_evidence_backed: bool
     confidence: float | None
     risk_if_skipped: str | None
+    source_signal_keys: list[str] = []
     created_at: float
     updated_at: float
 
@@ -66,6 +74,7 @@ class PlanItemView(BaseModel):
             is_evidence_backed=item.is_evidence_backed,
             confidence=item.confidence,
             risk_if_skipped=item.risk_if_skipped,
+            source_signal_keys=list(item.source_signal_keys),
             created_at=item.created_at,
             updated_at=item.updated_at,
         )
