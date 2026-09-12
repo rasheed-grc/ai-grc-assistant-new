@@ -19,11 +19,11 @@
       "missions": "Missions",
       "controls": "Controls",
       "policies": "Policies",
-      "policyIntelligence": "Policy Intelligence",
       "frameworks": "Frameworks",
       "riskRegister": "Risk Register",
       "evidence": "Evidence",
       "reports": "Reports",
+      "team": "Team",
       "settings": "Settings",
       "help": "Help & Support",
       "aiWorker": "AI Worker",
@@ -951,6 +951,11 @@
       "description": "Manage organization preferences, members, and workspace configuration."
     }
   },
+  "teamPage": {
+    "eyebrow": "Organization",
+    "title": "Team",
+    "description": "Invite colleagues to this organization, assign their role, and manage access."
+  },
   "teamManagement": {
     "title": "Team",
     "subtitle": "Everyone with access to this organization's workspace.",
@@ -998,6 +1003,42 @@
     "emailSent": "Invitation email sent to {email}.",
     "emailNotSent": "Couldn't send the invitation email — share the link above instead."
   },
+  "policyRecommendations": {
+    "title": "Policy Recommendations",
+    "description": "Grounded in this organization's Governance Program answers, risks, existing policies, and any matching regulatory sources — not a generic checklist.",
+    "analyze": "Analyze Policy Needs",
+    "analyzing": "Analyzing…",
+    "loading": "Loading recommendations…",
+    "loadError": "Something went wrong loading recommendations. Please try again.",
+    "analyzeError": "Something went wrong during analysis. Please try again.",
+    "needsGovernanceProgram": "Complete the Governance Program first — recommendations are grounded in its answers.",
+    "emptyTitle": "No recommendations yet",
+    "emptyDescription": "Run an analysis to get policy recommendations grounded in your Governance Program answers, risks, and applicable regulatory sources.",
+    "category": {
+      "general": "General policies",
+      "sector": "Sector-specific policies",
+      "establishment": "Specific to this organization"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "regulatoryRequirement": "Regulatory requirement",
+    "recommendedPractice": "Recommended practice",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "basis": "Basis",
+    "relatedRequirementOrRisk": "Related requirement/risk",
+    "practicalGuidance": "Practical guidance",
+    "recommendedContents": "Recommended contents",
+    "references": "References",
+    "createDraft": "Create draft",
+    "dismiss": "Dismiss",
+    "draftCreated": "Draft created.",
+    "openDraft": "Open it"
+  },
   "policiesWorkspace": {
     "policyCount": "{count} policies",
     "newPolicy": "New policy",
@@ -1043,77 +1084,6 @@
     "createError": "Something went wrong creating this policy. Please try again.",
     "transitionError": "This action couldn't be completed. Please try again."
   },
-  "policyIntelligenceWorkspace": {
-    "tabs": {
-      "obligations": "Obligations",
-      "coverageGaps": "Coverage Gaps",
-      "qualityReview": "Quality Review"
-    },
-    "filters": {
-      "allControlDomains": "All control domains"
-    },
-    "loadFailed": "Something went wrong loading this. Please try again.",
-    "obligationCount": "{count} obligations",
-    "loadingObligations": "Loading obligations…",
-    "obligationsEmptyTitle": "No confirmed obligations",
-    "obligationsEmptyDescription": "Confirmed regulatory obligations will appear here once Policy Hunter's pipeline classifies them.",
-    "suggestedPolicy": "Suggested policy: {title}",
-    "confidence": "Confidence: {value}",
-    "controlDomain": {
-      "governance": "Governance",
-      "risk_management": "Risk management",
-      "access_control": "Access control",
-      "data_protection": "Data protection",
-      "asset_management": "Asset management",
-      "physical_security": "Physical security",
-      "human_resources_security": "Human resources security",
-      "incident_management": "Incident management",
-      "business_continuity": "Business continuity",
-      "third_party_management": "Third-party management",
-      "compliance_monitoring": "Compliance monitoring",
-      "other": "Other"
-    },
-    "severity": {
-      "critical": "Critical",
-      "high": "High",
-      "medium": "Medium",
-      "low": "Low",
-      "informational": "Informational"
-    },
-    "coverageSummary": "{scanned} obligations scanned · {policies} policies considered · {gaps} gaps found",
-    "loadingCoverageGaps": "Scanning for coverage gaps…",
-    "coverageGapsEmptyTitle": "No coverage gaps found",
-    "coverageGapsEmptyDescription": "Every confirmed obligation in scope is covered by a policy.",
-    "gapCategory": {
-      "unmapped_regulatory_obligation": "Unmapped obligation",
-      "missing_required_policy": "Missing required policy",
-      "incomplete_coverage": "Incomplete coverage",
-      "outdated_policy": "Outdated policy"
-    },
-    "matchedPolicy": "Closest policy: {title}",
-    "noMatchedPolicy": "No related policy found.",
-    "selectPolicyLabel": "Review a policy's quality",
-    "selectPolicyPlaceholder": "Select a policy…",
-    "qualityReviewEmptyTitle": "Select a policy to review",
-    "qualityReviewEmptyDescription": "Choose a policy above to see its completeness, regulatory alignment, internal consistency, and freshness findings.",
-    "loadingQualityReview": "Reviewing policy quality…",
-    "qualityReviewNoFindingsTitle": "No issues found",
-    "qualityReviewNoFindingsDescription": "This policy has no completeness, alignment, consistency, or freshness findings.",
-    "obligationsConsidered": "{count} confirmed obligations considered",
-    "findingType": {
-      "missing_required_section": "Missing required section",
-      "missing_clause": "Missing clause",
-      "weak_regulatory_coverage": "Weak regulatory coverage",
-      "outdated_reference": "Outdated reference",
-      "conflicting_requirements": "Conflicting requirements",
-      "unclear_ownership": "Unclear ownership",
-      "ambiguous_language": "Ambiguous language",
-      "stale_policy": "Stale policy",
-      "policy_older_than_regulation": "Policy older than regulation"
-    },
-    "recommendation": "Recommendation: {text}",
-    "relatedObligation": "Related obligation: {id}"
-  },
   "reportsPage": {
     "eyebrow": "Risk & Compliance",
     "title": "Reports",
@@ -1140,7 +1110,9 @@
     "exportPdf": "Export PDF",
     "exportExcel": "Export Excel",
     "loading": "Building report…",
-    "noRows": "No rows."
+    "noRows": "No rows.",
+    "tenantLabel": "Organization",
+    "generatedByLabel": "Generated by"
   },
   "riskRegister": {
     "newRisk": "New risk",
@@ -1253,11 +1225,6 @@
     "eyebrow": "Governance",
     "title": "Policies",
     "description": "Author policies, map them to controls, and move them through review to publication. Publishing is a human-gated action restricted to owners, admins, and compliance managers."
-  },
-  "policyIntelligencePage": {
-    "eyebrow": "Governance",
-    "title": "Policy Intelligence",
-    "description": "Deterministic, evidence-backed scans of regulatory obligations against your policies — coverage gaps and per-policy quality findings, always with a source citation. Read-only: nothing here drafts or changes a policy."
   },
   "evidencePage": {
     "eyebrow": "Risk & Compliance",
@@ -1814,6 +1781,7 @@
       "why": "Why this matters",
       "expectedOutcome": "Expected outcome",
       "ifIgnored": "If ignored",
+      "source": "Generated from your Governance Program answers to",
       "confidence": "{value}% confidence",
       "dueIn": "Due in {days, plural, one {# day} other {# days}}",
       "dueToday": "Due today",
