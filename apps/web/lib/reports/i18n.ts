@@ -8,6 +8,9 @@
 
 import type { AppLocale } from "@/i18n/routing";
 import type { RiskCategory, RiskStatus, Severity } from "@/lib/risk/types";
+import type { PolicyStatus } from "@/lib/policies/types";
+import type { PolicyRecommendationCategory } from "@/lib/policyRecommendations/types";
+import type { PlanItemStatus } from "@/lib/planExecution/types";
 import type { ReportKind } from "./types";
 
 export interface ReportLabels {
@@ -38,6 +41,14 @@ export interface ReportLabels {
     policyRegister: string;
     severityDistribution: string;
     riskRegister: string;
+    governanceStatus: string;
+    policyStatus: string;
+    documentReview: string;
+    actionPlan: string;
+    keyFindings: string;
+    recommendations: string;
+    nextSteps: string;
+    references: string;
   };
   tables: {
     frameworkCoverageTitle: string;
@@ -47,6 +58,11 @@ export interface ReportLabels {
     risksBySeverity: string;
     allRisks: string;
     noControlGaps: string;
+    policyStatusTitle: string;
+    documentReviewTitle: string;
+    actionPlanTitle: string;
+    recommendationsTitle: string;
+    referencesTitle: string;
   };
   columns: {
     framework: string;
@@ -67,10 +83,36 @@ export interface ReportLabels {
     count: string;
     inherent: string;
     residual: string;
+    task: string;
+    priority: string;
+    dueDate: string;
+    document: string;
+    uploadedDate: string;
+    recommendation: string;
+    reason: string;
+    reference: string;
   };
   severity: Record<Severity, string>;
   riskStatus: Record<RiskStatus, string>;
   riskCategory: Record<RiskCategory, string>;
+  policyStatusLabel: Record<PolicyStatus, string>;
+  recommendationCategory: Record<PolicyRecommendationCategory, string>;
+  planItemStatus: Record<PlanItemStatus, string>;
+  noDueDate: string;
+  governanceNotStarted: string;
+  governanceActive: (version: number, done: number, total: number) => string;
+  governanceReviewDue: string;
+  governanceNextReview: (date: string) => string;
+  noPolicies: string;
+  noDocuments: string;
+  documentsSummary: (total: number, processed: number) => string;
+  noOpenActionItems: string;
+  noKeyFindings: string;
+  noRecommendations: string;
+  nextStepsIntro: string;
+  nextStepsNoneUrgent: string;
+  nextStepsReviewDue: string;
+  nextStepsCompleteAssessment: string;
 }
 
 const EN: ReportLabels = {
@@ -111,6 +153,14 @@ const EN: ReportLabels = {
     policyRegister: "Policies",
     severityDistribution: "Severity distribution",
     riskRegister: "Risk register",
+    governanceStatus: "Governance status",
+    policyStatus: "Policy status",
+    documentReview: "Document review",
+    actionPlan: "Tasks / action plan",
+    keyFindings: "Key findings",
+    recommendations: "Recommendations",
+    nextSteps: "Next steps",
+    references: "References / sources",
   },
   tables: {
     frameworkCoverageTitle: "Coverage by framework",
@@ -120,6 +170,11 @@ const EN: ReportLabels = {
     risksBySeverity: "Risks by severity",
     allRisks: "All risks",
     noControlGaps: "No control gaps — every catalogued control has linked evidence.",
+    policyStatusTitle: "Policies by status",
+    documentReviewTitle: "Uploaded documents",
+    actionPlanTitle: "Open action items",
+    recommendationsTitle: "Pending policy recommendations",
+    referencesTitle: "Sources cited by recommendations",
   },
   columns: {
     framework: "Framework",
@@ -140,6 +195,14 @@ const EN: ReportLabels = {
     count: "Count",
     inherent: "Inherent",
     residual: "Residual",
+    task: "Task",
+    priority: "Priority",
+    dueDate: "Due date",
+    document: "Document",
+    uploadedDate: "Uploaded",
+    recommendation: "Recommendation",
+    reason: "Reason",
+    reference: "Source",
   },
   severity: { low: "Low", medium: "Medium", high: "High", critical: "Critical" },
   riskStatus: { open: "Open", mitigating: "Mitigating", accepted: "Accepted", closed: "Closed" },
@@ -151,6 +214,43 @@ const EN: ReportLabels = {
     third_party: "Third party",
     financial: "Financial",
   },
+  policyStatusLabel: {
+    draft: "Draft",
+    in_review: "In review",
+    published: "Published",
+    archived: "Archived",
+  },
+  recommendationCategory: {
+    general: "General policies",
+    sector: "Sector-specific policies",
+    establishment: "Specific to this organization",
+  },
+  planItemStatus: {
+    not_started: "Not started",
+    in_progress: "In progress",
+    done: "Done",
+    deferred: "Deferred",
+    not_applicable: "Not applicable",
+  },
+  noDueDate: "no due date",
+  governanceNotStarted:
+    "This organization has not completed a governance assessment yet — there is no active governance plan.",
+  governanceActive: (version, done, total) =>
+    `The governance plan (v${version}) is active. Of ${total} total action items, ${done} are complete and ${total - done} remain open.`,
+  governanceReviewDue: "The periodic review of this plan is due now.",
+  governanceNextReview: (date) => `Next review due ${date}.`,
+  noPolicies: "No policies recorded for this organization yet.",
+  noDocuments: "No documents have been uploaded for this organization yet.",
+  documentsSummary: (total, processed) =>
+    `${total} document(s) uploaded in total, ${processed} processed and retrievable by the AI Assistant.`,
+  noOpenActionItems: "No open action items — every governance plan item is complete or not applicable.",
+  noKeyFindings: "No key findings recorded from the current assessment.",
+  noRecommendations: "No pending policy recommendations at this time.",
+  nextStepsIntro: "Recommended priority next steps:",
+  nextStepsNoneUrgent: "No urgent next steps — every governance plan item is complete.",
+  nextStepsReviewDue: "The periodic governance plan review is also due now.",
+  nextStepsCompleteAssessment:
+    "The recommended next step is to complete the governance assessment to generate an action plan.",
 };
 
 const AR: ReportLabels = {
@@ -191,6 +291,14 @@ const AR: ReportLabels = {
     policyRegister: "السياسات",
     severityDistribution: "توزيع درجات الخطورة",
     riskRegister: "سجل المخاطر",
+    governanceStatus: "حالة برنامج الحوكمة",
+    policyStatus: "حالة السياسات",
+    documentReview: "مراجعة المستندات",
+    actionPlan: "المهام / خطة العمل",
+    keyFindings: "النتائج الرئيسية",
+    recommendations: "التوصيات",
+    nextSteps: "الخطوات التالية",
+    references: "المراجع / المصادر",
   },
   tables: {
     frameworkCoverageTitle: "التغطية حسب الإطار",
@@ -200,6 +308,11 @@ const AR: ReportLabels = {
     risksBySeverity: "المخاطر حسب درجة الخطورة",
     allRisks: "جميع المخاطر",
     noControlGaps: "لا توجد فجوات في الضوابط — كل ضابط مُصنّف مرتبط بدليل.",
+    policyStatusTitle: "السياسات حسب الحالة",
+    documentReviewTitle: "المستندات المرفوعة",
+    actionPlanTitle: "المهام المفتوحة",
+    recommendationsTitle: "توصيات السياسات المعلّقة",
+    referencesTitle: "المصادر التي استندت إليها التوصيات",
   },
   columns: {
     framework: "الإطار",
@@ -220,6 +333,14 @@ const AR: ReportLabels = {
     count: "العدد",
     inherent: "الكامنة",
     residual: "المتبقية",
+    task: "المهمة",
+    priority: "الأولوية",
+    dueDate: "تاريخ الاستحقاق",
+    document: "المستند",
+    uploadedDate: "تاريخ الرفع",
+    recommendation: "التوصية",
+    reason: "السبب",
+    reference: "المصدر",
   },
   severity: { low: "منخفضة", medium: "متوسطة", high: "عالية", critical: "حرجة" },
   riskStatus: { open: "مفتوح", mitigating: "قيد التخفيف", accepted: "مقبول", closed: "مغلق" },
@@ -231,6 +352,42 @@ const AR: ReportLabels = {
     third_party: "طرف ثالث",
     financial: "مالي",
   },
+  policyStatusLabel: {
+    draft: "مسودة",
+    in_review: "قيد المراجعة",
+    published: "معتمدة",
+    archived: "مؤرشفة",
+  },
+  recommendationCategory: {
+    general: "سياسات عامة",
+    sector: "سياسات خاصة بالقطاع",
+    establishment: "خاصة بهذه المنشأة",
+  },
+  planItemStatus: {
+    not_started: "لم تبدأ",
+    in_progress: "قيد التنفيذ",
+    done: "مكتملة",
+    deferred: "مؤجّلة",
+    not_applicable: "غير قابلة للتطبيق",
+  },
+  noDueDate: "بدون موعد",
+  governanceNotStarted:
+    "لم تُكمل هذه المنشأة برنامج تقييم الحوكمة بعد — لا توجد خطة حوكمة نشطة حالياً.",
+  governanceActive: (version, done, total) =>
+    `خطة الحوكمة (الإصدار ${version}) نشطة حالياً. من إجمالي ${total} مهمة، أُنجزت ${done} ومتبقٍ ${total - done}.`,
+  governanceReviewDue: "المراجعة الدورية لهذه الخطة مستحقة الآن.",
+  governanceNextReview: (date) => `موعد المراجعة القادمة: ${date}.`,
+  noPolicies: "لا توجد سياسات مسجلة لهذه المنشأة بعد.",
+  noDocuments: "لم تُرفع أي مستندات لهذه المنشأة بعد.",
+  documentsSummary: (total, processed) =>
+    `${total} مستندًا مرفوعًا إجمالاً، منها ${processed} تمت معالجته وأصبح قابلاً للاسترجاع ضمن إجابات المساعد الذكي.`,
+  noOpenActionItems: "لا توجد مهام مفتوحة حالياً — جميع بنود خطة الحوكمة منجزة أو غير قابلة للتطبيق.",
+  noKeyFindings: "لا توجد نتائج رئيسية مسجلة من التقييم الحالي.",
+  noRecommendations: "لا توجد توصيات سياسات معلّقة حالياً.",
+  nextStepsIntro: "الخطوات التالية الموصى بها حسب الأولوية:",
+  nextStepsNoneUrgent: "لا توجد خطوات تالية عاجلة — جميع بنود خطة الحوكمة منجزة.",
+  nextStepsReviewDue: "كما أن المراجعة الدورية لخطة الحوكمة مستحقة الآن.",
+  nextStepsCompleteAssessment: "الخطوة التالية الموصى بها هي إكمال برنامج تقييم الحوكمة لإنشاء خطة عمل.",
 };
 
 export function getReportLabels(locale: AppLocale): ReportLabels {

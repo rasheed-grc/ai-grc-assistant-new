@@ -4,7 +4,7 @@
  */
 
 import { getPool } from "@/lib/db/pool";
-import type { Policy, PolicyStatus } from "./types";
+import type { Policy, PolicyGenerationMetadata, PolicyStatus } from "./types";
 
 export interface PolicyRepository {
   list(tenantId: string): Promise<Policy[]>;
@@ -29,6 +29,9 @@ interface PolicyRow {
   updated_at: Date;
   approved_by_name: string | null;
   approved_at: Date | null;
+  ai_generated: boolean;
+  generated_by_tool: string | null;
+  generation_metadata: PolicyGenerationMetadata | null;
 }
 
 function toPolicy(row: PolicyRow): Policy {
@@ -47,6 +50,9 @@ function toPolicy(row: PolicyRow): Policy {
     updatedAt: row.updated_at.toISOString(),
     approvedByName: row.approved_by_name ?? undefined,
     approvedAt: row.approved_at?.toISOString(),
+    aiGenerated: row.ai_generated,
+    generatedByTool: row.generated_by_tool ?? undefined,
+    generationMetadata: row.generation_metadata ?? undefined,
   };
 }
 
@@ -71,8 +77,9 @@ class PostgresPolicyRepository implements PolicyRepository {
     await getPool().query(
       `INSERT INTO policies (
          id, tenant_id, title, summary, body, status, owner_name, control_ids,
-         created_by_user_id, created_by_name, created_at, updated_at, approved_by_name, approved_at
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+         created_by_user_id, created_by_name, created_at, updated_at, approved_by_name, approved_at,
+         ai_generated, generated_by_tool, generation_metadata
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
       [
         policy.id,
         policy.tenantId,
@@ -88,6 +95,9 @@ class PostgresPolicyRepository implements PolicyRepository {
         policy.updatedAt,
         policy.approvedByName ?? null,
         policy.approvedAt ?? null,
+        policy.aiGenerated ?? false,
+        policy.generatedByTool ?? null,
+        policy.generationMetadata ? JSON.stringify(policy.generationMetadata) : null,
       ],
     );
     return policy;

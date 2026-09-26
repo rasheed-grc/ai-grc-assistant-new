@@ -14,6 +14,11 @@ export interface OrganizationRepository {
   getMembership(userId: string, organizationId: string): Promise<OrganizationMembership | null>;
   isMember(userId: string, organizationId: string): Promise<boolean>;
   create(org: Organization): Promise<Organization>;
+  /** Partial update of an existing organization's own fields (never membership/role rows). */
+  update(
+    organizationId: string,
+    patch: Partial<Pick<Organization, "name" | "orgType" | "industry">>,
+  ): Promise<Organization | null>;
   addMember(userId: string, organizationId: string, role: string): Promise<void>;
   /** Every real member of one organization, for the Settings > Team page. */
   listMembers(organizationId: string): Promise<OrganizationMember[]>;
@@ -88,6 +93,34 @@ class PostgresOrganizationRepository implements OrganizationRepository {
       [org.id, org.name, org.orgType, org.industry, org.createdByUserId, org.createdAt],
     );
     return org;
+  }
+
+  async update(
+    organizationId: string,
+    patch: Partial<Pick<Organization, "name" | "orgType" | "industry">>,
+  ): Promise<Organization | null> {
+    const sets: string[] = [];
+    const values: unknown[] = [];
+    if (patch.name !== undefined) {
+      values.push(patch.name);
+      sets.push(`name = $${values.length}`);
+    }
+    if (patch.orgType !== undefined) {
+      values.push(patch.orgType);
+      sets.push(`org_type = $${values.length}`);
+    }
+    if (patch.industry !== undefined) {
+      values.push(patch.industry);
+      sets.push(`industry = $${values.length}`);
+    }
+    if (sets.length === 0) return this.get(organizationId);
+
+    values.push(organizationId);
+    const { rows } = await getPool().query<OrganizationRow>(
+      `UPDATE organizations SET ${sets.join(", ")} WHERE id = $${values.length} RETURNING *`,
+      values,
+    );
+    return rows[0] ? toOrganization(rows[0]) : null;
   }
 
   async addMember(userId: string, organizationId: string, role: string): Promise<void> {

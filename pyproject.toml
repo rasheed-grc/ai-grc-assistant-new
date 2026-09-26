@@ -31,8 +31,6 @@ members = [
   "packages/regulatory-intelligence",
   "packages/regulatory-intelligence-adapters",
   "packages/regulatory-crawlers",
-  "packages/policy-hunter",
-  "packages/policy-analyst",
   "packages/policy-builder",
   "packages/knowledge-intelligence",
   "packages/knowledge-intelligence-adapters",
@@ -72,8 +70,6 @@ grc-persistence-web = { workspace = true }
 grc-regulatory-intelligence = { workspace = true }
 grc-regulatory-intelligence-adapters = { workspace = true }
 grc-regulatory-crawlers = { workspace = true }
-grc-policy-hunter = { workspace = true }
-grc-policy-analyst = { workspace = true }
 grc-policy-builder = { workspace = true }
 grc-knowledge-intelligence = { workspace = true }
 grc-knowledge-intelligence-adapters = { workspace = true }

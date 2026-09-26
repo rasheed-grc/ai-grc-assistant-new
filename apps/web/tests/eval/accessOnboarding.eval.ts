@@ -6,8 +6,7 @@
  * re-reviewing an already-decided request).
  *
  * Requires apps/web's live Postgres reachable via `DATABASE_URL` with migrations applied
- * (`npm run db:migrate`). Skips with a clear message rather than failing when it isn't set —
- * the same convention `policyIntelligence.eval.ts` uses for a missing `apps/api`.
+ * (`npm run db:migrate`). Skips with a clear message rather than failing when it isn't set.
  *
  * Run directly: `pnpm --filter @grc/web exec tsx tests/eval/accessOnboarding.eval.ts`
  * Wired into `pnpm test` via package.json.
@@ -62,6 +61,7 @@ async function main(): Promise<void> {
     userName: "E2E Admin",
     userEmail: "eval@test.local",
     tenantId: "e2e-admin-org",
+    organizationName: "E2E Admin Org",
     roles: ["owner"],
     apiToken: "unused",
   };

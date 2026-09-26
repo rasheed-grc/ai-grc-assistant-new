@@ -32,8 +32,6 @@ members=(
   packages/regulatory-intelligence
   packages/regulatory-intelligence-adapters
   packages/regulatory-crawlers
-  packages/policy-hunter
-  packages/policy-analyst
   packages/policy-builder
   packages/knowledge-intelligence
   packages/knowledge-intelligence-adapters

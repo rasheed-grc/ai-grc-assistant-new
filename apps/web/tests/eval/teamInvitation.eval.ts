@@ -56,23 +56,25 @@ async function main(): Promise<void> {
   let orgAId: string | null = null;
   let orgBId: string | null = null;
 
-  function ownerActor(tenantId: string): ActorContext {
+  function ownerActor(tenantId: string, organizationName = "E2E Team Owner Org"): ActorContext {
     return {
       userId: ownerUserId,
       userName: "E2E Team Owner",
     userEmail: "eval@test.local",
       tenantId,
+      organizationName,
       roles: ["owner"],
       apiToken: "unused",
     };
   }
 
-  function memberActor(tenantId: string): ActorContext {
+  function memberActor(tenantId: string, organizationName = "E2E Team Member Org"): ActorContext {
     return {
       userId: `e2e-team-member-${runId}`,
       userName: "E2E Team Member",
     userEmail: "eval@test.local",
       tenantId,
+      organizationName,
       roles: ["analyst"],
       apiToken: "unused",
     };

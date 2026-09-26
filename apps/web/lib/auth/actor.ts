@@ -14,6 +14,10 @@ export interface ActorContext {
    * list of UUIDs is a list an operator cannot check (ADR 0067's knowledge approvers). */
   userEmail: string;
   tenantId: string;
+  /** The organization's display name — e.g. for report headers, which must show a name a human
+   *  reads, never the raw tenant id (a bug found while building the General GRC Report: every
+   *  report's "organization" line was literally rendering the tenant UUID). */
+  organizationName: string;
   roles: UserRole[];
   /** Backend bearer token for this actor (used when proxying to the FastAPI API). */
   apiToken: string;
@@ -27,6 +31,7 @@ export async function getActor(): Promise<ActorContext | null> {
     userName: session.name,
     userEmail: session.email,
     tenantId: session.organizationId,
+    organizationName: session.organizationName,
     roles: session.roles,
     apiToken: session.apiToken,
   };

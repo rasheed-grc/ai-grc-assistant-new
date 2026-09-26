@@ -1,6 +1,7 @@
 "use client";
 
 import { createLocalListStore } from "./localListStore";
+import { useSession } from "@/components/auth/SessionProvider";
 import type { SearchEntityType } from "@/lib/search/types";
 
 export interface RecentlyViewedItem {
@@ -18,9 +19,14 @@ const store = createLocalListStore<RecentlyViewedItem>({
   itemKey: (item) => `${item.type}:${item.id}`,
 });
 
-/** Call from a detail view's mount effect to record "the user just opened this." */
-export function recordVisit(item: Omit<RecentlyViewedItem, "viewedAt">) {
-  store.add({ ...item, viewedAt: new Date().toISOString() });
+/** Call from a detail view's mount effect to record "the user just opened this."
+ *  `organizationId` scopes the entry to the organization active at the time — callers get
+ *  theirs from `useSession().user.organizationId`. */
+export function recordVisit(item: Omit<RecentlyViewedItem, "viewedAt">, organizationId: string) {
+  store.add(organizationId, { ...item, viewedAt: new Date().toISOString() });
 }
 
-export const useRecentlyViewed = store.useItems;
+export function useRecentlyViewed(): RecentlyViewedItem[] {
+  const { user } = useSession();
+  return store.useItems(user.organizationId);
+}

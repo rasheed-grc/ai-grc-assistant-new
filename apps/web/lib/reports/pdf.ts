@@ -4,6 +4,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { formatReportTimestamp } from "./format";
 import type { Report, ReportTable } from "./types";
 
 const PAGE_W = 595.28;
@@ -18,10 +19,70 @@ const ACCENT = rgb(0.43, 0.42, 0.87);
 const LINE = rgb(0.85, 0.85, 0.88);
 const HEADER_BG = rgb(0.96, 0.96, 0.98);
 
-export async function renderReportPdf(report: Report): Promise<Buffer> {
+// The export route forces locale="en" for PDF specifically because pdf-lib's standard fonts
+// only support WinAnsi (Latin-1-ish) encoding and cannot render Arabic glyphs — but that only
+// guarantees the report's LABELS are English. The underlying VALUES (a risk title, a policy
+// recommendation's reason, a governance plan's executive summary) are whatever language they
+// were actually authored or generated in, which for an organization run through the Arabic
+// interview is Arabic — and pdf-lib throws, not silently drops, on an unencodable character.
+// Sanitizing the whole report up front (rather than crashing mid-render) keeps the same
+// documented "PDF is English-only" limitation honest instead of turning it into a 500.
+const NON_LATIN_PLACEHOLDER = "(non-Latin text — see the on-screen report or the Excel export)";
+
+function isWinAnsiEncodable(font: PDFFont, text: string): boolean {
+  if (text === "") return true;
+  try {
+    font.widthOfTextAtSize(text, 10);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeLine(font: PDFFont, text: string): string {
+  return isWinAnsiEncodable(font, text) ? text : NON_LATIN_PLACEHOLDER;
+}
+
+// Sanitizes line-by-line so one Arabic line in an otherwise-English multi-line narrative
+// doesn't blank out the whole paragraph.
+function sanitizeText(font: PDFFont, text: string): string {
+  return text
+    .split("\n")
+    .map((line) => sanitizeLine(font, line))
+    .join("\n");
+}
+
+function sanitizeReportForPdf(font: PDFFont, report: Report): Report {
+  return {
+    ...report,
+    title: sanitizeText(font, report.title),
+    subtitle: sanitizeText(font, report.subtitle),
+    tenantName: sanitizeText(font, report.tenantName),
+    generatedBy: sanitizeText(font, report.generatedBy),
+    kpis: report.kpis.map((kpi) => ({
+      label: sanitizeText(font, kpi.label),
+      value: sanitizeText(font, kpi.value),
+    })),
+    sections: report.sections.map((section) => ({
+      ...section,
+      heading: sanitizeText(font, section.heading),
+      narrative: section.narrative ? sanitizeText(font, section.narrative) : section.narrative,
+      table: section.table
+        ? {
+            title: sanitizeText(font, section.table.title),
+            columns: section.table.columns.map((c) => sanitizeText(font, c)),
+            rows: section.table.rows.map((row) => row.map((cell) => sanitizeText(font, cell))),
+          }
+        : undefined,
+    })),
+  };
+}
+
+export async function renderReportPdf(reportInput: Report): Promise<Buffer> {
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const report = sanitizeReportForPdf(font, reportInput);
 
   let page = doc.addPage([PAGE_W, PAGE_H]);
   let y = PAGE_H - MARGIN;
@@ -64,7 +125,7 @@ export async function renderReportPdf(report: Report): Promise<Buffer> {
     MUTED,
   );
   y -= 12;
-  write(`Generated ${new Date(report.generatedAt).toUTCString()}`, MARGIN, 9, font, MUTED);
+  write(`Generated ${formatReportTimestamp(report.generatedAt, "en")}`, MARGIN, 9, font, MUTED);
   y -= 18;
   page.drawLine({
     start: { x: MARGIN, y },
@@ -132,15 +193,39 @@ export async function renderReportPdf(report: Report): Promise<Buffer> {
     }
   };
 
+  // Wraps a paragraph of text to `maxW`, splitting on existing newlines first — narratives like
+  // "Next steps" carry a numbered list as literal `\n`-separated lines that must stay separate.
+  const wrapLines = (value: string, f: PDFFont, size: number, maxW: number): string[] => {
+    const out: string[] = [];
+    for (const paragraph of value.split("\n")) {
+      const words = paragraph.split(" ");
+      let current = "";
+      for (const word of words) {
+        const candidate = current ? `${current} ${word}` : word;
+        if (f.widthOfTextAtSize(candidate, size) > maxW && current) {
+          out.push(current);
+          current = word;
+        } else {
+          current = candidate;
+        }
+      }
+      out.push(current);
+    }
+    return out;
+  };
+
   // Sections
   for (const section of report.sections) {
     ensure(34);
     write(section.heading, MARGIN, 13, bold);
     y -= 18;
     if (section.narrative) {
-      ensure(16);
-      write(truncate(section.narrative, font, 10, CONTENT_W), MARGIN, 10, font, MUTED);
-      y -= 16;
+      for (const narrativeLine of wrapLines(section.narrative, font, 10, CONTENT_W)) {
+        ensure(14);
+        write(narrativeLine, MARGIN, 10, font, MUTED);
+        y -= 14;
+      }
+      y -= 2;
     }
     if (section.table) drawTable(section.table);
     y -= 16;

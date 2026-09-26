@@ -119,6 +119,7 @@ interface PlanItemDto {
   is_evidence_backed: boolean;
   confidence: number | null;
   risk_if_skipped: string | null;
+  source_signal_keys?: string[];
   created_at: number;
   updated_at: number;
 }
@@ -185,6 +186,7 @@ function toItem(dto: PlanItemDto): PlanItem {
     isEvidenceBacked: dto.is_evidence_backed,
     confidence: dto.confidence,
     riskIfSkipped: dto.risk_if_skipped,
+    sourceSignalKeys: dto.source_signal_keys ?? [],
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };

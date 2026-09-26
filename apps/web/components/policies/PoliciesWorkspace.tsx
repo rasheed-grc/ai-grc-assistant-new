@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { ControlPicker } from "@/components/evidence/ControlPicker";
+import { PolicyRecommendations } from "./PolicyRecommendations";
 import {
   useCreatePolicy,
   useDeletePolicy,
@@ -19,6 +20,7 @@ import {
 import { getControl } from "@/lib/frameworks/catalog";
 import { POLICY_TRANSITIONS, type PolicyStatus, type PolicySummary } from "@/lib/policies/types";
 import { recordVisit } from "@/lib/workspace/recentlyViewed";
+import { useSession } from "@/components/auth/SessionProvider";
 import { cn, formatDate } from "@/lib/utils";
 
 export interface PolicyPermissions {
@@ -65,6 +67,8 @@ export function PoliciesWorkspace(permissions: PolicyPermissions) {
 
   return (
     <div className="space-y-5">
+      {permissions.canCreate && <PolicyRecommendations />}
+
       <div className="flex items-center justify-between">
         <p className="text-2xs text-foreground-muted">
           {t("policyCount", { count: policies?.length ?? 0 })}
@@ -272,6 +276,7 @@ function PolicyDetailModal({
   onClose: () => void;
 }) {
   const t = useTranslations("policiesWorkspace");
+  const { user } = useSession();
   const { data: policy, isLoading, isError, isFetching } = usePolicy(id);
   const update = useUpdatePolicy();
   const transition = useTransitionPolicy();
@@ -283,14 +288,17 @@ function PolicyDetailModal({
 
   useEffect(() => {
     if (!policy) return;
-    recordVisit({
-      id: policy.id,
-      type: "policy",
-      title: policy.title,
-      subtitle: policy.ownerName,
-      href: `/policies?open=${policy.id}`,
-    });
-  }, [policy]);
+    recordVisit(
+      {
+        id: policy.id,
+        type: "policy",
+        title: policy.title,
+        subtitle: policy.ownerName,
+        href: `/policies?open=${policy.id}`,
+      },
+      user.organizationId,
+    );
+  }, [policy, user.organizationId]);
 
   if (isError || (!policy && !isFetching)) {
     return (

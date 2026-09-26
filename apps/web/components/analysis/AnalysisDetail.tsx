@@ -18,6 +18,7 @@ import {
   type AnalysisUsage,
 } from "@/lib/analysis/types";
 import { recordVisit } from "@/lib/workspace/recentlyViewed";
+import { useSession } from "@/components/auth/SessionProvider";
 import { formatNumber } from "@/lib/utils";
 
 const PIPELINE_STEP_KEYS = ["parse", "chunk", "embed", "index", "assess", "score"] as const;
@@ -211,6 +212,7 @@ function ProcessedAnalysis({
   startError: string | null;
 }) {
   const t = useTranslations("analysisDetail");
+  const { user } = useSession();
   // Adaptive-layout slot (design proposal §8/§12): selects the section set for this
   // document's category. Empty registry today, so every category renders the same
   // generic module DefaultModule already did — this lookup has zero visible effect
@@ -220,15 +222,18 @@ function ProcessedAnalysis({
   const Module = getAnalysisModule(category);
 
   useEffect(() => {
-    recordVisit({
-      id: analysis.documentId,
-      type: "analysis",
-      title: analysis.title,
-      subtitle: `v${analysis.version}`,
-      href: `/analysis?doc=${analysis.documentId}`,
-    });
+    recordVisit(
+      {
+        id: analysis.documentId,
+        type: "analysis",
+        title: analysis.title,
+        subtitle: `v${analysis.version}`,
+        href: `/analysis?doc=${analysis.documentId}`,
+      },
+      user.organizationId,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analysis.id]);
+  }, [analysis.id, user.organizationId]);
 
   return (
     <div className="space-y-5">

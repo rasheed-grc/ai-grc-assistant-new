@@ -5,9 +5,11 @@ import {
   fetchMyOrganizations,
   fetchOrganizationTeam,
   inviteTeamMember,
+  updateOrganization,
   type InviteTeamMemberResponse,
+  type UpdateOrganizationInput,
 } from "@/lib/organizations/client";
-import type { OrganizationTeam } from "@/lib/organizations/types";
+import type { Organization, OrganizationTeam } from "@/lib/organizations/types";
 import type { InvitedRole } from "@/lib/invitations/types";
 
 const ORGANIZATIONS_KEY = ["organizations"] as const;
@@ -32,5 +34,13 @@ export function useInviteTeamMember() {
   return useMutation<InviteTeamMemberResponse, Error, { email: string; invitedRole: InvitedRole }>({
     mutationFn: ({ email, invitedRole }) => inviteTeamMember(email, invitedRole),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: TEAM_KEY }),
+  });
+}
+
+export function useUpdateOrganization() {
+  const queryClient = useQueryClient();
+  return useMutation<Organization, Error, UpdateOrganizationInput>({
+    mutationFn: (input) => updateOrganization(input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ORGANIZATIONS_KEY }),
   });
 }

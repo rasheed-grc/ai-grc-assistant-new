@@ -109,6 +109,7 @@ def _default_executor(
     engine: DiscoveryEngine,
     store_factory: Callable[[], Any],
     knowledge_store_factory: Callable[[], Any] | None = None,
+    knowledge_base: TenantKnowledgeBase | None = None,
 ) -> ExecutionPort:
     """The production executor: real tools when an LLM is configured, echo when it is not.
 
@@ -132,6 +133,7 @@ def _default_executor(
         discovery_engine=engine,
         generation_provider=provider,
         knowledge_store_factory=knowledge_store_factory,
+        knowledge_base=knowledge_base,
     )
 
 
@@ -176,8 +178,12 @@ def create_app(
     resolved_knowledge_factory = knowledge_store_factory or (
         lambda: PostgresKnowledgeStore(dsn=governance_database_dsn())
     )
+    # Resolved here, too, and reused verbatim as `app.state.knowledge_base` below — the executor's
+    # `local_search` tool and `POST /v1/documents`' ingestion must read and write the SAME base, or
+    # a real upload would land in one instance while every mission searches an empty other one.
+    resolved_knowledge_base = knowledge_base or TenantKnowledgeBase()
     run_step: ExecutionPort = executor or _default_executor(
-        resolved_engine, resolved_store_factory, resolved_knowledge_factory
+        resolved_engine, resolved_store_factory, resolved_knowledge_factory, resolved_knowledge_base
     )
     launch: MissionLaunchPort
     if storage is Storage.MEMORY:
@@ -222,7 +228,7 @@ def create_app(
     # the upload ingests into. One base holds every tenant's chunks (each chunk tenant-scoped), so
     # retrieval never crosses the boundary. Both drop in at this seam (Postgres / pgvector later).
     app.state.document_read_model = document_read_model or build_document_read_model(storage, where)
-    app.state.knowledge_base = knowledge_base or TenantKnowledgeBase()
+    app.state.knowledge_base = resolved_knowledge_base
     # The Mission Catalog (Slice S7): a Mission type IS a plan factory. The create command reads it
     # to turn a chosen type + scope into the Core's (goal, plan). The bundled catalog holds the 6.
     app.state.mission_catalog = default_mission_catalog()

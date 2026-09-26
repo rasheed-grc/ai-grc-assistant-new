@@ -281,7 +281,12 @@ class PlanDraftTool:
                 ),
             ],
             response_contract=_NO_CITATIONS_CONTRACT,
-            params={"temperature": 0.3, "max_output_tokens": 400},
+            # 400 was too tight for the four-label item format (RATIONALE/OBJECTIVE/
+            # EXPECTED_OUTCOME/RISK_IF_SKIPPED) once Arabic prose is involved — Arabic runs
+            # token-heavier per sentence than English, so longer items were cut off mid-response,
+            # right after starting the final label. `_parse_labeled_lines` now also strips a
+            # dangling partial-label fragment defensively, but the real fix is headroom.
+            params={"temperature": 0.3, "max_output_tokens": 900},
         )
         try:
             return self._provider.generate(request).text
@@ -383,6 +388,19 @@ class PlanDraftTool:
         }
 
 
+def _strip_dangling_label(content: str, labels: tuple[str, ...]) -> str:
+    """A response truncated mid-way through starting the NEXT label (e.g. `"...done.\nRISK"`, cut
+    off before its colon) has no complete label for the lookahead in `_parse_labeled_lines` to stop
+    at, so the partial fragment gets swallowed into the previous field's captured content. Strip a
+    trailing `\n<fragment>` when `<fragment>` is a strict, case-sensitive prefix of one of the known
+    labels — real content never ends in exactly that shape, so this only ever removes the artifact,
+    not a legitimate sentence."""
+    match = re.search(r"\n([A-Z_]+)\Z", content)
+    if match and any(label != match.group(1) and label.startswith(match.group(1)) for label in labels):
+        return content[: match.start()].rstrip()
+    return content
+
+
 def _parse_labeled_lines(text: str, labels: tuple[str, ...]) -> dict[str, str]:
     """Parses the `LABEL: content` lines the drafting prompts require — deterministic string
     parsing, never a second LLM call and never `eval`/JSON-guessing (CLAUDE.md §6 pillar 8). A
@@ -394,6 +412,7 @@ def _parse_labeled_lines(text: str, labels: tuple[str, ...]) -> dict[str, str]:
     matches = list(re.finditer(regex, text, re.DOTALL))
     for match in matches:
         label, content = match.group(1), match.group(2).strip()
+        content = _strip_dangling_label(content, labels)
         if content:
             result[label] = content
     return result

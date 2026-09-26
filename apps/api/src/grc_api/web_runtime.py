@@ -1,9 +1,10 @@
-"""The Policy Intelligence wiring against apps/web's live PostgreSQL schema.
+"""Shared wiring against apps/web's live PostgreSQL schema (Policies, Knowledge Worker,
+Regulation Review).
 
 This is deliberately **separate** from ``composition.py``'s ``store_backend`` (which selects
 the in-memory vs. the ADL-0008-gated SQLAlchemy binding for the *other*, pre-existing
-command/query bus routers). Policy Intelligence does not touch that gated path or its schema
-at all — it reads/writes apps/web's actual tables through ``grc_persistence_web``.
+command/query bus routers). The features wired here do not touch that gated path or its
+schema at all — they read/write apps/web's actual tables through ``grc_persistence_web``.
 
 The tricky part: ``build_container`` runs synchronously at ``create_app`` time (the test
 harness explicitly bypasses the async ``lifespan`` — see ``app.py``), but an asyncpg pool must
@@ -27,49 +28,18 @@ from grc_persistence_web import (
     KnowledgeItemRepository,
     PolicyMissionStore,
     PolicyRepository,
-    PostgresToolInvocationRecorder,
     RegulationDocumentRepository,
     RegulationSectionRepository,
     RegulationSourceRepository,
     RegulationSourceVersionRepository,
-    RegulatoryObligationRepository,
-    RegulatoryRawDocumentRepository,
     WorkerControlRepository,
     WorkerEventRepository,
     WorkerRunHistoryRepository,
 )
-from grc_policy_analyst import ReviewPolicyQualityTool
-from grc_policy_hunter import ListApplicableObligationsTool, ScanPolicyCoverageGapsTool
-from grc_tools import ToolRegistry
 
 
 class WebRuntimeNotConfiguredError(RuntimeError):
-    """``DATABASE_URL`` is not set — Policy Intelligence needs a connection to apps/web's schema."""
-
-
-def _register_policy_intelligence_tools(registry: ToolRegistry, database: Database) -> None:
-    """Register Policy Hunter's and Policy Analyst's Tools (PI-P3/PI-P4) against apps/web's
-    live schema. Called exactly once per process, right after a fresh ``ToolRegistry`` is
-    built — ``ToolRegistry.register`` itself would raise on a second call for the same
-    name/version, so this must never run twice against the same registry instance.
-    """
-    obligations = RegulatoryObligationRepository(database)
-    raw_documents = RegulatoryRawDocumentRepository(database)
-    policies = PolicyRepository(database)
-
-    registry.register(
-        ListApplicableObligationsTool(obligations=obligations, raw_documents=raw_documents)
-    )
-    registry.register(
-        ScanPolicyCoverageGapsTool(
-            obligations=obligations, raw_documents=raw_documents, policies=policies
-        )
-    )
-    registry.register(
-        ReviewPolicyQualityTool(
-            policies=policies, obligations=obligations, raw_documents=raw_documents
-        )
-    )
+    """``DATABASE_URL`` is not set — this feature needs a connection to apps/web's schema."""
 
 
 async def get_web_database(app: FastAPI, database_url: str) -> Database:
@@ -83,23 +53,12 @@ async def get_web_database(app: FastAPI, database_url: str) -> Database:
         if existing is None:
             if not database_url:
                 raise WebRuntimeNotConfiguredError(
-                    "DATABASE_URL is not configured; Policy Intelligence needs a "
+                    "DATABASE_URL is not configured; this feature needs a "
                     "web_postgres connection to apps/web's schema"
                 )
             existing = await Database.connect(database_url)
             app.state.web_database = existing
     return existing
-
-
-async def get_tool_registry(app: FastAPI, database_url: str) -> ToolRegistry:
-    existing: ToolRegistry | None = getattr(app.state, "tool_registry", None)
-    if existing is not None:
-        return existing
-    database = await get_web_database(app, database_url)
-    registry = ToolRegistry(recorder=PostgresToolInvocationRecorder(database))
-    _register_policy_intelligence_tools(registry, database)
-    app.state.tool_registry = registry
-    return registry
 
 
 async def get_policy_repository(app: FastAPI, database_url: str) -> PolicyRepository:

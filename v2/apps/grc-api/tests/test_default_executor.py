@@ -191,3 +191,144 @@ def test_governance_reports_the_ANTHROPIC_key_when_it_is_missing(caplog):
         assert build_generation_provider(LLMRole.GOVERNANCE, {}) is None
     assert "ANTHROPIC_API_KEY" in caplog.text
     assert "governance" in caplog.text
+
+
+# --- regression: gap_assessment/risk_assessment's tools are actually registered -----------
+#
+# `assistant_runtime.builtin.default_mission_catalog()` includes gap_assessment, risk_assessment,
+# iso_controls, policy_generator, and vendor_review — every one of them resolves a step to
+# `local_search` or `generate_text` (see `execution.py`'s module docstring). Until this suite,
+# nothing exercised those steps against the REAL default executor: the in-memory suites use
+# `Storage.MEMORY` with `EchoExecutor`, and the production suite needs a real Postgres, so it
+# skips everywhere but a fully-configured environment. The result was a mission that always
+# failed its second step with "no tool named 'local_search' is registered" the moment a real
+# governance LLM was configured — caught only by running the production suite against a real
+# database with a real credential (see the final report).
+#
+# No mocked search here: a real `TenantKnowledgeBase` is fed a real document through the same
+# `knowledge_runtime.ingest_document` the upload endpoint uses, and `local_search` is invoked for
+# real through the real `ToolRegistry`/`RegistryExecutor`. Only the LLM call behind `generate_text`
+# is a stub (`_StaticProvider`) — this suite is about tool *registration and retrieval*, not model
+# output quality (that is `tests/eval` / the production E2E suite's job, both of which need a live
+# credential this fast unit suite must not depend on).
+
+
+class _StaticProvider:
+    """A `GenerationProvider` stand-in: returns canned text instead of calling a real vendor SDK.
+    Fine here because this suite proves the tool is *reachable*, not what a real model says."""
+
+    name = "static-test-provider"
+
+    def generate(self, request):  # noqa: ANN001, ANN201 - matches GenerationProvider structurally
+        from pipeline_contracts import Answer
+
+        return Answer(text="stub answer", provider=self.name)
+
+
+class _NoopStore:
+    def close(self) -> None:
+        pass
+
+
+def _executor_with_knowledge_base(knowledge_base):
+    return GovernancePlanExecutor(
+        store_factory=_NoopStore,
+        discovery_engine=_engine(),
+        generation_provider=_StaticProvider(),
+        knowledge_base=knowledge_base,
+    )
+
+
+def _search_step(tenant_id: str, instruction: str):
+    from mission_engine import StepRequest
+    from pipeline_contracts import TenantContext
+
+    return StepRequest(
+        mission_id="mis_test",
+        step_id="stp_test",
+        tenant=TenantContext(tenant_id=tenant_id),
+        instruction=instruction,
+        tool="local_search",
+    )
+
+
+def test_local_search_and_generate_text_are_registered_for_the_default_executor():
+    """The exact regression: both tools gap_assessment/risk_assessment need must resolve through
+    the registry the default executor builds — this is what "no tool named 'local_search' is
+    registered" means was false before the fix."""
+    from knowledge_runtime import TenantKnowledgeBase
+
+    executor = _executor_with_knowledge_base(TenantKnowledgeBase())
+    registry = executor._registry(_NoopStore())  # noqa: SLF001 - the seam under test
+
+    assert "local_search" in registry
+    assert "generate_text" in registry
+
+
+def test_local_search_retrieves_a_real_ingested_document_not_a_stub():
+    """Ingests a REAL document (the same `ingest_document` call `POST /v1/documents` makes),
+    then runs the REAL `local_search` tool through the REAL registry/executor and asserts the
+    tool's output contains the document's own distinctive text — proof this is real retrieval,
+    not a stub tool that would make the test pass regardless of what was ingested."""
+    from knowledge_runtime import TenantKnowledgeBase, ingest_document
+    from pipeline_contracts import TenantContext
+
+    kb = TenantKnowledgeBase()
+    marker = "REGRESSION-MARKER-9f3c1a"
+    ingest_document(
+        kb,
+        f"Access Control Policy. {marker}. MFA is required for all privileged accounts.",
+        tenant=TenantContext(tenant_id="tenant-a"),
+        document_id="doc-1",
+        source_filename="access-control-policy.txt",
+    )
+
+    executor = _executor_with_knowledge_base(kb)
+    result = executor.execute(_search_step("tenant-a", "access control MFA"))
+
+    assert result.ok, f"local_search failed: {result.output!r}"
+    assert marker in result.output, (
+        f"local_search did not return the real ingested content: {result.output!r}"
+    )
+
+
+def test_local_search_never_returns_another_tenants_document():
+    """Same ingested document as above, scoped to tenant-a — a search run as tenant-b must never
+    see it. `SearchTool` (search-tools/search.py) documents the engine's defence-in-depth as
+    failing SAFE here (`ok=False`, a `TenancyError` refusal) rather than silently filtering the
+    result down to empty — a stronger guarantee than "no leak in the text", so that is what this
+    asserts, on top of the marker never appearing anywhere in the output regardless."""
+    from knowledge_runtime import TenantKnowledgeBase, ingest_document
+    from pipeline_contracts import TenantContext
+
+    kb = TenantKnowledgeBase()
+    marker = "REGRESSION-MARKER-TENANT-A-ONLY"
+    ingest_document(
+        kb,
+        f"Access Control Policy. {marker}. MFA is required for all privileged accounts.",
+        tenant=TenantContext(tenant_id="tenant-a"),
+        document_id="doc-1",
+        source_filename="access-control-policy.txt",
+    )
+
+    executor = _executor_with_knowledge_base(kb)
+    result = executor.execute(_search_step("tenant-b", "access control MFA"))
+
+    assert not result.ok, (
+        "tenant-b's search must fail safe, not succeed, when it can only touch tenant-a's data"
+    )
+    assert marker not in result.output, "tenant-b's search saw tenant-a's document"
+    assert any("tenant isolation" in w or "TenancyError" in w for w in result.warnings), (
+        f"expected a tenant-isolation refusal, got: {result.warnings!r}"
+    )
+
+
+def test_without_a_knowledge_base_local_search_is_simply_not_offered():
+    """Backward compatibility: a caller that constructs `GovernancePlanExecutor` without a
+    knowledge base (existing unit tests, e.g. the store-lifetime test above) gets exactly the
+    pre-fix 4-tool registry — `local_search` is absent, never a stub that fakes a result."""
+    executor = _executor_with_knowledge_base(None)
+    registry = executor._registry(_NoopStore())  # noqa: SLF001 - the seam under test
+
+    assert "local_search" not in registry
+    assert "generate_text" in registry

@@ -19,7 +19,6 @@ from .routers import (
     orchestrator,
     platform,
     policies,
-    policy_intelligence,
     regulation_review,
     reporting,
     risks,
@@ -36,7 +35,6 @@ def build_v1_router() -> APIRouter:
     router.include_router(frameworks.router)
     router.include_router(controls.router)
     router.include_router(policies.router)
-    router.include_router(policy_intelligence.router)
     router.include_router(risks.router)
     router.include_router(assessments.router)
     router.include_router(evidence.router)

@@ -25,7 +25,9 @@ SYSTEM_PROMPT = (
     "or standard by name (e.g. ISO 27001, NIST, PDPL, CIS, SOC 2) — describe outcomes and "
     "practices instead; the standards themselves are disclosed elsewhere, not in this text. Base "
     "every claim STRICTLY on the facts given to you in the request — never invent a fact, a "
-    "number, or a finding that is not present in the provided context. "
+    "number, or a finding that is not present in the provided context. The context may list facts "
+    "as `key: value` pairs — restate these as natural sentences; never reproduce a field name, "
+    "code identifier, or literal value (e.g. `yes`/`no`, a quoted string) verbatim in your prose. "
     # The boundary between the two engines, stated to the model itself and not only in the docs.
     # Sector answers were added to this role's context so that a plan can be EXPLAINED in the
     # customer's own terms; a model that responded by proposing an extra action would have made
@@ -45,6 +47,23 @@ CORE_CONTEXT_HEADING = (
 )
 
 
+def _humanize_signal_key(key: str) -> str:
+    """`has_compliance_officer` -> `has compliance officer`. Not the original question text (the
+    engine only knows the signal's internal name, not its i18n-resolved prompt — that catalog lives
+    in apps/web) — but plain spaced words read as English, not as a code identifier, which is what
+    actually leaked into drafted prose (a model shown `has_compliance_officer: False` echoed that
+    literal token back rather than restating it)."""
+    return key.replace("_", " ")
+
+
+def _humanize_signal_value(value: object) -> object:
+    """Booleans as `yes`/`no`, everything else untouched. `False`/`True` read as Python/JSON
+    literals when quoted back in prose; `yes`/`no` reads as an answer."""
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    return value
+
+
 def core_context_block(signals: dict) -> str:
     """What the customer actually said, not only what the engine concluded from it.
 
@@ -55,7 +74,11 @@ def core_context_block(signals: dict) -> str:
     """
     if not signals:
         return ""
-    lines = [f"- {key}: {value}" for key, value in sorted(signals.items()) if value is not None]
+    lines = [
+        f"- {_humanize_signal_key(key)}: {_humanize_signal_value(value)}"
+        for key, value in sorted(signals.items())
+        if value is not None
+    ]
     if not lines:
         return ""
     return "\n\n" + CORE_CONTEXT_HEADING + "\n".join(lines)

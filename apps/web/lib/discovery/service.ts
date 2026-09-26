@@ -1,7 +1,7 @@
 /**
  * Governance Discovery application service — proxies to `v2/apps/grc-api`'s `/v1/discovery/*`
  * router (ADR 0066), the first live wiring between `apps/web` and the V2 Python backend. Follows
- * the exact same shape as `lib/policyIntelligence/service.ts`'s proxy-to-FastAPI pattern, with one
+ * the exact same shape as `lib/regulationReview/service.ts`'s proxy-to-FastAPI pattern, with one
  * difference: authentication is a freshly-minted service assertion (`serviceToken.ts`), not the
  * actor's `apiToken` (that token is scoped to the older `apps/api` service and its own, unrelated
  * credential scheme). Node-only (server components / route handlers only).

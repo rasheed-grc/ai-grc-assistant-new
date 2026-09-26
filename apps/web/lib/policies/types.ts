@@ -6,6 +6,17 @@
 export const POLICY_STATUSES = ["draft", "in_review", "published", "archived"] as const;
 export type PolicyStatus = (typeof POLICY_STATUSES)[number];
 
+export interface PolicyGenerationMetadata {
+  model?: string;
+  promptVersion?: string;
+  confidence?: number;
+  citations?: string[];
+  sourceDocumentIds?: string[];
+  invocationId?: string;
+  /** The `policy_recommendations.id` this draft was created from, when applicable. */
+  recommendationId?: string;
+}
+
 export interface Policy {
   id: string;
   tenantId: string;
@@ -21,6 +32,11 @@ export interface Policy {
   updatedAt: string;
   approvedByName?: string;
   approvedAt?: string;
+  /** Provenance (0014_policy_provenance.sql) — set when a draft was authored by an AI tool
+   *  (e.g. Policies Intelligence) rather than typed by hand, so the workspace can disclose it. */
+  aiGenerated?: boolean;
+  generatedByTool?: string;
+  generationMetadata?: PolicyGenerationMetadata;
 }
 
 export interface PolicySummary {

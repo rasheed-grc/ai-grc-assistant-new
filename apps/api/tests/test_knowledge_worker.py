@@ -2,9 +2,8 @@
 activity timeline, run history, learning reports, schedule updates, and manual trigger,
 driven through the real ASGI app against apps/web's live Postgres schema.
 
-Needs a real database with apps/web's migrations applied (same convention as
-``test_policy_intelligence.py``): point ``TEST_DATABASE_URL`` (or ``DATABASE_URL``) at one,
-or these tests skip cleanly.
+Needs a real database with apps/web's migrations applied: point ``TEST_DATABASE_URL``
+(or ``DATABASE_URL``) at one, or these tests skip cleanly.
 """
 
 from __future__ import annotations

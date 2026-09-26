@@ -19,11 +19,11 @@
       "missions": "المهام",
       "controls": "الضوابط",
       "policies": "السياسات",
-      "policyIntelligence": "استخبارات السياسات",
       "frameworks": "الأطر",
       "riskRegister": "سجل المخاطر",
       "evidence": "الأدلة",
       "reports": "التقارير",
+      "team": "الفريق",
       "settings": "الإعدادات",
       "help": "المساعدة والدعم",
       "aiWorker": "العامل الذكي",
@@ -951,6 +951,11 @@
       "description": "أدر تفضيلات المؤسسة والأعضاء وإعدادات مساحة العمل."
     }
   },
+  "teamPage": {
+    "eyebrow": "المنشأة",
+    "title": "الفريق",
+    "description": "ادعُ زملاءك إلى هذه المنشأة، وحدّد أدوارهم، وأدر صلاحيات وصولهم."
+  },
   "teamManagement": {
     "title": "الفريق",
     "subtitle": "كل من لديه صلاحية الوصول إلى مساحة عمل هذه المؤسسة.",
@@ -998,6 +1003,42 @@
     "emailSent": "تم إرسال بريد الدعوة إلى {email}.",
     "emailNotSent": "تعذّر إرسال بريد الدعوة — شارك الرابط أعلاه بدلاً من ذلك."
   },
+  "policyRecommendations": {
+    "title": "توصيات السياسات",
+    "description": "مبنية على إجابات المنشأة في برنامج الحوكمة، ومخاطرها، وسياساتها الحالية، وأي مصادر نظامية ذات صلة — وليست قائمة عامة جاهزة.",
+    "analyze": "تحليل الاحتياج من السياسات",
+    "analyzing": "جارٍ التحليل…",
+    "loading": "جارٍ تحميل التوصيات…",
+    "loadError": "حدث خطأ أثناء تحميل التوصيات. يرجى المحاولة مرة أخرى.",
+    "analyzeError": "حدث خطأ أثناء التحليل. يرجى المحاولة مرة أخرى.",
+    "needsGovernanceProgram": "أكمل برنامج الحوكمة أولاً — التوصيات مبنية على إجاباته.",
+    "emptyTitle": "لا توجد توصيات بعد",
+    "emptyDescription": "شغّل تحليلاً للحصول على توصيات سياسات مبنية على إجابات برنامج الحوكمة ومخاطركم والمصادر النظامية ذات العلاقة.",
+    "category": {
+      "general": "سياسات عامة",
+      "sector": "سياسات خاصة بالقطاع",
+      "establishment": "خاصة بهذه المنشأة"
+    },
+    "priority": {
+      "critical": "حرجة",
+      "high": "عالية",
+      "medium": "متوسطة",
+      "low": "منخفضة"
+    },
+    "regulatoryRequirement": "متطلب نظامي",
+    "recommendedPractice": "ممارسة موصى بها",
+    "showDetails": "عرض التفاصيل",
+    "hideDetails": "إخفاء التفاصيل",
+    "basis": "الأساس",
+    "relatedRequirementOrRisk": "المتطلب/الخطر ذو العلاقة",
+    "practicalGuidance": "إرشادات عملية",
+    "recommendedContents": "المحتويات الموصى بها",
+    "references": "المراجع",
+    "createDraft": "إنشاء مسودة",
+    "dismiss": "تجاهل",
+    "draftCreated": "تم إنشاء المسودة.",
+    "openDraft": "فتحها"
+  },
   "policiesWorkspace": {
     "policyCount": "{count} سياسة",
     "newPolicy": "سياسة جديدة",
@@ -1043,77 +1084,6 @@
     "createError": "حدث خطأ أثناء إنشاء هذه السياسة. يرجى المحاولة مرة أخرى.",
     "transitionError": "تعذر إتمام هذا الإجراء. يرجى المحاولة مرة أخرى."
   },
-  "policyIntelligenceWorkspace": {
-    "tabs": {
-      "obligations": "الالتزامات",
-      "coverageGaps": "فجوات التغطية",
-      "qualityReview": "مراجعة الجودة"
-    },
-    "filters": {
-      "allControlDomains": "كل نطاقات الضوابط"
-    },
-    "loadFailed": "حدث خطأ أثناء التحميل. يرجى المحاولة مرة أخرى.",
-    "obligationCount": "{count} التزامات",
-    "loadingObligations": "جاري تحميل الالتزامات…",
-    "obligationsEmptyTitle": "لا توجد التزامات مؤكدة",
-    "obligationsEmptyDescription": "ستظهر هنا الالتزامات التنظيمية المؤكدة بمجرد أن يقوم مسار «صائد السياسات» بتصنيفها.",
-    "suggestedPolicy": "السياسة المقترحة: {title}",
-    "confidence": "درجة الثقة: {value}",
-    "controlDomain": {
-      "governance": "الحوكمة",
-      "risk_management": "إدارة المخاطر",
-      "access_control": "ضبط الوصول",
-      "data_protection": "حماية البيانات",
-      "asset_management": "إدارة الأصول",
-      "physical_security": "الأمن المادي",
-      "human_resources_security": "أمن الموارد البشرية",
-      "incident_management": "إدارة الحوادث",
-      "business_continuity": "استمرارية الأعمال",
-      "third_party_management": "إدارة الأطراف الثالثة",
-      "compliance_monitoring": "مراقبة الامتثال",
-      "other": "أخرى"
-    },
-    "severity": {
-      "critical": "حرجة",
-      "high": "عالية",
-      "medium": "متوسطة",
-      "low": "منخفضة",
-      "informational": "معلوماتية"
-    },
-    "coverageSummary": "تم فحص {scanned} التزامًا · {policies} سياسة تم بحثها · {gaps} فجوة",
-    "loadingCoverageGaps": "جاري فحص فجوات التغطية…",
-    "coverageGapsEmptyTitle": "لا توجد فجوات تغطية",
-    "coverageGapsEmptyDescription": "كل التزام مؤكد ضمن النطاق مغطّى بسياسة.",
-    "gapCategory": {
-      "unmapped_regulatory_obligation": "التزام غير مرتبط بأي سياسة",
-      "missing_required_policy": "سياسة مطلوبة مفقودة",
-      "incomplete_coverage": "تغطية غير مكتملة",
-      "outdated_policy": "سياسة قديمة"
-    },
-    "matchedPolicy": "أقرب سياسة: {title}",
-    "noMatchedPolicy": "لم يتم العثور على سياسة ذات صلة.",
-    "selectPolicyLabel": "مراجعة جودة سياسة",
-    "selectPolicyPlaceholder": "اختر سياسة…",
-    "qualityReviewEmptyTitle": "اختر سياسة للمراجعة",
-    "qualityReviewEmptyDescription": "اختر سياسة أعلاه لعرض نتائج اكتمالها، ومواءمتها التنظيمية، واتساقها الداخلي، وحداثتها.",
-    "loadingQualityReview": "جاري مراجعة جودة السياسة…",
-    "qualityReviewNoFindingsTitle": "لم يتم العثور على مشكلات",
-    "qualityReviewNoFindingsDescription": "لا توجد نتائج متعلقة بالاكتمال أو المواءمة أو الاتساق أو الحداثة لهذه السياسة.",
-    "obligationsConsidered": "تم بحث {count} التزامًا مؤكدًا",
-    "findingType": {
-      "missing_required_section": "قسم مطلوب مفقود",
-      "missing_clause": "بند مفقود",
-      "weak_regulatory_coverage": "تغطية تنظيمية ضعيفة",
-      "outdated_reference": "مرجع قديم",
-      "conflicting_requirements": "متطلبات متعارضة",
-      "unclear_ownership": "ملكية غير واضحة",
-      "ambiguous_language": "صياغة غامضة",
-      "stale_policy": "سياسة غير محدثة",
-      "policy_older_than_regulation": "السياسة أقدم من التنظيم"
-    },
-    "recommendation": "التوصية: {text}",
-    "relatedObligation": "الالتزام المرتبط: {id}"
-  },
   "reportsPage": {
     "eyebrow": "المخاطر والامتثال",
     "title": "التقارير",
@@ -1140,7 +1110,9 @@
     "exportPdf": "تصدير PDF",
     "exportExcel": "تصدير Excel",
     "loading": "جارٍ إعداد التقرير…",
-    "noRows": "لا توجد بيانات."
+    "noRows": "لا توجد بيانات.",
+    "tenantLabel": "المنشأة",
+    "generatedByLabel": "أُعد بواسطة"
   },
   "riskRegister": {
     "newRisk": "خطر جديد",
@@ -1253,11 +1225,6 @@
     "eyebrow": "الحوكمة",
     "title": "السياسات",
     "description": "أنشئ السياسات، واربطها بالضوابط، وانقلها عبر مراحل المراجعة حتى النشر. يُعد نشر السياسة إجراءً يتطلب موافقة بشرية، ويقتصر على المالكين والمسؤولين ومديري الامتثال."
-  },
-  "policyIntelligencePage": {
-    "eyebrow": "الحوكمة",
-    "title": "استخبارات السياسات",
-    "description": "فحوصات حتمية موثّقة بالأدلة تقارن الالتزامات التنظيمية بسياساتك — فجوات التغطية ونتائج الجودة لكل سياسة، مع الإشارة إلى المصدر دائمًا. للقراءة فقط: لا شيء هنا يُنشئ أو يُعدّل سياسة."
   },
   "evidencePage": {
     "eyebrow": "المخاطر والامتثال",
@@ -1814,6 +1781,7 @@
       "why": "لماذا هذا مهم",
       "expectedOutcome": "النتيجة المتوقعة",
       "ifIgnored": "عند التجاهل",
+      "source": "نتج عن إجاباتكم في برنامج الحوكمة على",
       "confidence": "ثقة {value}%",
       "dueIn": "{days, plural, one {# يوم} other {# أيام}} متبقية",
       "dueToday": "الموعد اليوم",
@@ -2135,6 +2103,61 @@
       "iso_controls": "ضوابط ISO",
       "vendor_review": "مراجعة المورّدين",
       "simple_question": "مساعد الحوكمة الذكي"
+    },
+    "historyHeading": "السجل",
+    "catalog": {
+      "heading": "ابدأ مهمة",
+      "whyLabel": "لماذا تستخدمها",
+      "needsLabel": "ما تحتاجه",
+      "startButton": "ابدأ",
+      "scopeLabel": "ما الذي يجب أن تقيّمه هذه المهمة؟",
+      "scopeRequired": "حدّد للمهمة ما الذي يجب تقييمه.",
+      "startError": "تعذّر بدء هذه المهمة الآن. حاول مرة أخرى.",
+      "modal": {
+        "description": "هذا ينشئ المهمة ويخطط لها فقط — تراجع ما ستفعله قبل أن يبدأ أي تنفيذ.",
+        "cancel": "إلغاء",
+        "submit": "إنشاء المهمة"
+      },
+      "gap_assessment": {
+        "name": "تقييم الفجوات",
+        "description": "قيّم أي ضوابط ISO 27001 لنطاق معيّن مغطاة بأدلتك الفعلية وأيها فجوات.",
+        "why": "اعرف بالضبط الضوابط التي يمكنك إثباتها فعلاً، وتلك التي ما زالت تحتاج أدلة، قبل أن يسألك مدقق أو عميل.",
+        "needs": "تعمل بأفضل شكل عند وجود أدلة ذات صلة مرفوعة مسبقًا في المستندات (سياسات، إجراءات) — تبحث تلقائيًا في أدلة منشأتك المفهرسة.",
+        "scopePlaceholder": "مثال: ضبط الوصول، التشفير، إدارة الموردين"
+      },
+      "risk_assessment": {
+        "name": "تقييم المخاطر",
+        "description": "قيّم مخاطر موضوع معيّن — أصل، مورد، نظام، أو سيناريو — استنادًا إلى أدلتك الفعلية.",
+        "why": "حوّل قلقًا غامضًا (\"هل هذا المورد يشكل خطرًا؟\") إلى تقييم موثّق لاحتمالية الحدوث والأثر مع فجوات حقيقية محددة.",
+        "needs": "تعمل بأفضل شكل عند وجود أدلة ذات صلة بالموضوع مرفوعة مسبقًا في المستندات — تبحث تلقائيًا في أدلة منشأتك المفهرسة.",
+        "scopePlaceholder": "مثال: المورد Acme Corp، قاعدة بيانات الإنتاج، سياسة الوصول عن بُعد"
+      }
+    },
+    "detail": {
+      "reviewNotice": "هذه المهمة مخطَّطة وجاهزة — {count, plural, one {ستُنفّذ خطوة واحدة} other {ستُنفّذ # خطوات}}. لم يبدأ أي تنفيذ بعد.",
+      "executeButton": "تنفيذ",
+      "executeError": "تعذّر بدء تنفيذ هذه المهمة الآن. حاول مرة أخرى.",
+      "planHeading": "الخطة",
+      "planSubtitleReview": "ما ستقوم به هذه المهمة، بالترتيب.",
+      "planSubtitleRunning": "قيد التنفيذ الآن — يتحدّث هذا تلقائيًا.",
+      "planSubtitleDone": "ما قامت به هذه المهمة، بالترتيب.",
+      "failedTitle": "فشلت هذه المهمة",
+      "failedBody": "لم تُنتَج أي نتيجة — لم يُختلق شيء أدناه لسد الفراغ. راجع الخطوات أعلاه لمعرفة ما حدث قبل التوقف.",
+      "resultHeading": "النتيجة",
+      "resultLoading": "جارٍ تحميل النتيجة…",
+      "resultLoadError": "تعذّر تحميل النتيجة الآن.",
+      "trust": {
+        "evidence": "{count, plural, one {استشهاد دليل واحد} other {# استشهادات أدلة}}",
+        "humanReview": "المراجعة البشرية"
+      },
+      "coverage": {
+        "title": "التغطية — {framework}",
+        "control": "الضابط",
+        "status": "الحالة",
+        "covered": "مغطى",
+        "gap": "فجوة"
+      },
+      "citations": "المصادر"
     }
   },
   "helpPage": {
@@ -2342,5 +2365,27 @@
     "schedule_org_structure_review": "جدولة مراجعة الهيكل التنظيمي",
     "schedule_policy_review": "جدولة مراجعة السياسات",
     "schedule_risk_register_review": "جدولة مراجعة سجل المخاطر"
+  },
+  "settingsWorkspace": {
+    "tabs": {
+      "profile": "الملف الشخصي",
+      "security": "الأمان",
+      "organization": "المنشأة",
+      "team": "الفريق"
+    },
+    "readOnlyBadge": "(للعرض فقط)"
+  },
+  "organizationSettings": {
+    "title": "بيانات المنشأة",
+    "subtitleEditable": "مرئية لكل فريقك. يمكن للمالكين والمشرفين فقط تعديلها.",
+    "subtitleReadOnly": "مرئية لكل فريقك. يمكن للمالكين والمشرفين فقط تعديلها.",
+    "nameLabel": "اسم المنشأة",
+    "typeLabel": "نوع المنشأة",
+    "industryLabel": "القطاع / النشاط",
+    "save": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ…",
+    "loading": "جارٍ تحميل بيانات المنشأة…",
+    "loadError": "حدث خطأ أثناء تحميل بيانات المنشأة. حاول مرة أخرى.",
+    "genericError": "حدث خطأ ما. حاول مرة أخرى."
   }
 }

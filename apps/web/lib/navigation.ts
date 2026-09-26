@@ -9,7 +9,7 @@ import {
   Workflow,
   Settings,
   LifeBuoy,
-  Radar,
+  Users,
   Bot,
   Gavel,
   UserCheck,
@@ -110,13 +110,6 @@ export const PRIMARY_NAV: NavGroup[] = [
     items: [
       { label: "Controls", labelKey: "controls", href: "/controls", icon: ShieldCheck },
       { label: "Policies", labelKey: "policies", href: "/policies", icon: FileText },
-      {
-        label: "Policy Intelligence",
-        labelKey: "policyIntelligence",
-        href: "/policy-intelligence",
-        icon: Radar,
-        requiredPermission: { action: "read", resource: "policy" },
-      },
       { label: "Frameworks", labelKey: "frameworks", href: "/frameworks", icon: Library },
     ],
   },
@@ -159,13 +152,22 @@ export const FOOTER_NAV: NavLink[] = [
     icon: UserCheck,
     requiredRoles: ["owner", "admin"],
   },
-  // Workspace administration is restricted to owners and admins (matches the server guard).
+  // Team management is restricted to owners and admins (matches the page's own server guard).
+  {
+    label: "Team",
+    labelKey: "team",
+    href: "/team",
+    icon: Users,
+    requiredRoles: ["owner", "admin"],
+  },
+  // Settings is open to every signed-in role — Profile and Security are self-service for
+  // anyone, and the page's own Organization/Team tabs gate their write actions internally
+  // (matches the page's own server guard, which only requires a session, not a role).
   {
     label: "Settings",
     labelKey: "settings",
     href: "/settings",
     icon: Settings,
-    requiredRoles: ["owner", "admin"],
   },
   { label: "Help & Support", labelKey: "help", href: "/help", icon: LifeBuoy },
 ];

@@ -40,7 +40,6 @@ PROTECTED: dict[str, tuple[str, ...]] = {
     ),
     "discovery": ("/api/discovery/sessions/active",),
     "conversations": ("/api/conversations",),
-    "policy_intelligence": ("/api/policy-intelligence",),
     "regulation_review": ("/api/regulation-review",),
     "chat": ("/api/chat",),
 }
@@ -96,7 +95,6 @@ PAGES: tuple[str, ...] = (
     "/missions",
     "/controls",
     "/policies",
-    "/policy-intelligence",
     "/frameworks",
     "/risk-register",
     "/evidence",

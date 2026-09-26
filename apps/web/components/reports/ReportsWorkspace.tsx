@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart3,
   FileDown,
@@ -15,6 +15,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { useReport } from "@/hooks/useReport";
 import { reportExportUrl } from "@/lib/reports/client";
+import { formatReportTimestamp } from "@/lib/reports/format";
 import { REPORT_KINDS, type ReportKind } from "@/lib/reports/types";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ function isReportKind(value: string | null): value is ReportKind {
 
 export function ReportsWorkspace() {
   const t = useTranslations("reportsWorkspace");
+  const locale = useLocale() as "ar" | "en";
   const searchParams = useSearchParams();
   // Deep-link support for Global Search results (`/reports?kind=<kind>`).
   const initialKind = searchParams.get("kind");
@@ -116,6 +118,22 @@ export function ReportsWorkspace() {
           <p className="py-10 text-center text-sm text-danger">{(error as Error).message}</p>
         ) : report ? (
           <div className="mt-5 space-y-6">
+            {/* Report header: establishment, author, and generation time — a report shown to
+                senior management must say whose data this is and when it was produced. */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-hairline bg-surface/40 px-3 py-2 text-xs text-foreground-muted">
+              <span>
+                <span className="font-medium text-foreground-secondary">{t("tenantLabel")}:</span>{" "}
+                {report.tenantName}
+              </span>
+              <span>
+                <span className="font-medium text-foreground-secondary">
+                  {t("generatedByLabel")}:
+                </span>{" "}
+                {report.generatedBy}
+              </span>
+              <span>{formatReportTimestamp(report.generatedAt, locale)}</span>
+            </div>
+
             {/* KPIs */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {report.kpis.map((kpi) => (
@@ -141,7 +159,9 @@ export function ReportsWorkspace() {
                   <h3 className="text-sm font-semibold text-foreground">{section.heading}</h3>
                 </div>
                 {section.narrative && (
-                  <p className="mb-2 text-xs text-foreground-muted">{section.narrative}</p>
+                  <p className="mb-2 whitespace-pre-line text-xs text-foreground-muted">
+                    {section.narrative}
+                  </p>
                 )}
                 {section.table && (
                   <div className="overflow-x-auto rounded-xl border border-hairline">

@@ -51,6 +51,31 @@ export async function createOrganization(
   return org;
 }
 
+export const updateOrganizationSchema = z.object({
+  name: z.string().trim().min(1, "Company name is required.").max(200).optional(),
+  orgType: z.string().trim().min(1, "Company type is required.").max(120).optional(),
+  industry: z.string().trim().min(1, "Company activity/industry is required.").max(120).optional(),
+});
+
+/**
+ * Updates the caller's *current* organization (`actor.tenantId`) — never a client-supplied id,
+ * so this can only ever touch the tenant the caller is already scoped to. Owner/admin only,
+ * matching `inviteTeamMember`'s gate (organization-level actions aren't in the `can()` resource
+ * vocabulary, same as that function).
+ */
+export async function updateOrganization(actor: ActorContext, input: unknown): Promise<Organization> {
+  if (!actor.roles.includes("owner") && !actor.roles.includes("admin")) {
+    throw new ForbiddenError("Only workspace owners and admins may update organization details.");
+  }
+  const parsed = updateOrganizationSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid organization details.");
+  }
+  const updated = await organizationRepository.update(actor.tenantId, parsed.data);
+  if (!updated) throw new NotFoundError("Organization not found.");
+  return updated;
+}
+
 /** Verifies membership before a session switch; throws if the user does not belong. */
 export async function assertMembership(
   actor: ActorContext,
