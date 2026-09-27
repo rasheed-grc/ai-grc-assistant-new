@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, Loader2, Lock, Mail, TriangleAlert } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { LogoMark } from "@/components/ui/Logo";
@@ -18,6 +18,7 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const next = safeNext(searchParams.get("next"));
   const t = useTranslations("login");
+  const currentLocale = useLocale();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +42,14 @@ export function LoginForm() {
         return;
       }
       // Full navigation so the edge middleware sees the new cookie immediately.
+      const data = (await response.json().catch(() => ({}))) as { locale?: string | null };
+      const preferred = data.locale === "ar" || data.locale === "en" ? data.locale : null;
+      if (preferred && preferred !== currentLocale) {
+        // Honor the saved language: swap the locale segment of the destination.
+        const rest = next.replace(/^\/(ar|en)(?=\/|$)/, "");
+        window.location.assign(`/${preferred}${rest === "/" ? "" : rest}`);
+        return;
+      }
       window.location.assign(next);
     } catch {
       setError(t("networkError"));

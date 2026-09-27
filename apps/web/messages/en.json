@@ -42,7 +42,14 @@
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications yet.",
-    "menuLabel": "Notifications"
+    "menuLabel": "Notifications",
+    "menuLabelUnread": "Notifications, {count} unread",
+    "loadError": "Couldn't load notifications.",
+    "category": {
+      "approvals": "A mission is waiting for your approval",
+      "missionFailures": "A mission failed",
+      "team": "An invitation is still pending"
+    }
   },
   "orgSwitcher": {
     "switcherTrigger": "Switch organization",
@@ -1001,7 +1008,14 @@
     "copy": "Copy",
     "copied": "Copied",
     "emailSent": "Invitation email sent to {email}.",
-    "emailNotSent": "Couldn't send the invitation email — share the link above instead."
+    "emailNotSent": "Couldn't send the invitation email — share the link above instead.",
+    "removeMember": "Remove {name}",
+    "cancelInvite": "Cancel invitation for {email}",
+    "removeModal": {
+      "title": "Remove team member",
+      "body": "{name} will lose access to this organization immediately. Their account and any other organizations they belong to are not affected.",
+      "confirm": "Remove"
+    }
   },
   "policyRecommendations": {
     "title": "Policy Recommendations",
@@ -2371,7 +2385,8 @@
       "profile": "Profile",
       "security": "Security",
       "organization": "Organization",
-      "team": "Team"
+      "team": "Team",
+      "preferences": "Preferences"
     },
     "readOnlyBadge": "(read-only)"
   },
@@ -2387,5 +2402,33 @@
     "loading": "Loading organization details…",
     "loadError": "Something went wrong loading organization details. Please try again.",
     "genericError": "Something went wrong. Please try again."
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "These apply to your account only, on every device.",
+    "loadError": "Couldn't load your preferences.",
+    "saved": "Saved.",
+    "language": "Language",
+    "languageOption": {
+      "ar": "العربية",
+      "en": "English"
+    },
+    "timezone": "Time zone",
+    "timezoneHint": "Dates and times you see are shown in this time zone.",
+    "notifications": "Notifications",
+    "category": {
+      "approvals": {
+        "label": "Approvals",
+        "hint": "Missions waiting for your approval."
+      },
+      "missionFailures": {
+        "label": "Mission failures",
+        "hint": "Missions that failed in the last 14 days."
+      },
+      "team": {
+        "label": "Team invitations",
+        "hint": "Invitations still pending (owners and admins)."
+      }
+    }
   }
 }
