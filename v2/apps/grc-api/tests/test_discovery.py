@@ -192,3 +192,18 @@ def test_result_is_not_available_before_conclusion(client: TestClient) -> None:
     start = client.post("/v1/discovery/sessions", headers=AUTH_A).json()
     response = client.get(f"/v1/discovery/sessions/{start['session_id']}/result", headers=AUTH_A)
     assert response.status_code == 409
+
+
+def test_starting_again_while_one_is_in_progress_resumes_it_instead_of_orphaning_a_duplicate(
+    client: TestClient,
+) -> None:
+    first = client.post("/v1/discovery/sessions", headers=AUTH_A).json()
+    second = client.post("/v1/discovery/sessions", headers=AUTH_A).json()
+    assert second["session_id"] == first["session_id"]
+    assert client.get("/v1/discovery/sessions/active", headers=AUTH_A).json()["session_id"] == first["session_id"]
+
+
+def test_a_second_tenant_still_gets_its_own_session(client: TestClient) -> None:
+    a = client.post("/v1/discovery/sessions", headers=AUTH_A).json()
+    b = client.post("/v1/discovery/sessions", headers=AUTH_B).json()
+    assert a["session_id"] != b["session_id"]
