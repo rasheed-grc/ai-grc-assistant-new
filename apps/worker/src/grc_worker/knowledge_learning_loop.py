@@ -115,7 +115,7 @@ class WorkerSettings:
         if not database_url:
             raise WorkerConfigurationError(
                 "DATABASE_URL is not set; the Knowledge Worker needs a connection to apps/web's "
-                "schema (the same one apps/api's Policy Intelligence wiring uses)"
+                "schema (the same one apps/api's web-Postgres wiring uses)"
             )
 
         data_root = Path(environ.get("GRC_DATA_ROOT", str(_repo_root()))).resolve()
