@@ -79,7 +79,13 @@ async function main(): Promise<void> {
   assert(result.success, "response did not match the recommendations schema");
   if (!result.success) return; // unreachable — narrows for TypeScript
 
-  const { recommendations } = result.data;
+  // The same guard the service applies after every model response: the model proposes, this decides
+  // which recommendations may claim to be regulatory requirements. The fixture's only excerpt
+  // ([R1]) is "pending review", so nothing here may survive as a legal requirement.
+  const { enforceRegulatoryGrounding } = await import("../../lib/policyRecommendations/grounding");
+  const recommendations = enforceRegulatoryGrounding(result.data.recommendations, [
+    { status: "in_review" },
+  ]);
   assert(recommendations.length >= 3, `expected at least 3 recommendations, got ${recommendations.length}`);
 
   const categories = new Set(recommendations.map((r) => r.category));

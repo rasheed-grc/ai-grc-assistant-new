@@ -9,6 +9,7 @@
 import { randomUUID } from "node:crypto";
 import { ForbiddenError, NotFoundError, UpstreamError, ValidationError } from "@/lib/errors";
 import { can } from "@/lib/auth/permissions";
+import { enforceRegulatoryGrounding } from "./grounding";
 import type { ActorContext } from "@/lib/auth/actor";
 import { getChatProvider } from "@/lib/ai";
 import { getActivePlan } from "@/lib/planExecution/service";
@@ -189,7 +190,10 @@ export async function generateRecommendations(
     ...plan.items.slice(0, 6).map((i) => i.title),
     ...risks.slice(0, 4).map((r) => r.title),
   ].filter(Boolean);
-  const { text: regulatoryContextText } = await gatherRegulatoryContext(topics, locale);
+  const { hits: regulatoryHits, text: regulatoryContextText } = await gatherRegulatoryContext(
+    topics,
+    locale,
+  );
 
   const messages = buildPolicyRecommendationsPrompt({
     establishmentNarrative,
@@ -200,7 +204,11 @@ export async function generateRecommendations(
     locale,
   });
 
-  const recommendations = await callModelForRecommendations(messages);
+  // The model proposes; this decides which recommendations may claim to be legal requirements.
+  const recommendations = enforceRegulatoryGrounding(
+    await callModelForRecommendations(messages),
+    regulatoryHits,
+  );
   return policyRecommendationRepository.replacePending(
     actor.tenantId,
     plan.plan.sourceSessionId ?? undefined,
