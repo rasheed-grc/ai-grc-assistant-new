@@ -1,15 +1,23 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
-import { Check, Copy, Loader2, Mail, Plus, TriangleAlert, UserRound } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { Check, Copy, Loader2, Mail, Plus, Trash2, TriangleAlert, UserRound } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { useSession } from "@/components/auth/SessionProvider";
-import { useInviteTeamMember, useOrganizationTeam } from "@/hooks/useOrganizations";
+import {
+  useCancelTeamInvitation,
+  useInviteTeamMember,
+  useOrganizationTeam,
+  useRemoveTeamMember,
+} from "@/hooks/useOrganizations";
 import { INVITED_ROLES, type InvitedRole } from "@/lib/invitations/types";
-import { cn, formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { usePreferences } from "@/hooks/usePreferences";
+import { formatDateInZone } from "@/lib/preferences/format";
+import type { AppLocale } from "@/i18n/routing";
 
 const inputClass =
   "w-full rounded-lg border border-hairline bg-surface/60 px-3 text-sm text-foreground outline-none focus:border-hairline-strong";
@@ -22,10 +30,24 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 export function TeamManagement() {
   const t = useTranslations("teamManagement");
-  const { hasRole } = useSession();
+  const { user, hasRole } = useSession();
+  const locale = useLocale() as AppLocale;
+  const timeZone = usePreferences().data?.timezone ?? "Asia/Riyadh";
   const canInvite = hasRole("owner", "admin");
   const { data, isLoading, isError } = useOrganizationTeam();
   const [inviting, setInviting] = useState(false);
+  const [confirmRemoval, setConfirmRemoval] = useState<{ userId: string; name: string } | null>(
+    null,
+  );
+  const remove = useRemoveTeamMember();
+  const cancelInvite = useCancelTeamInvitation();
+  const [actionError, setActionError] = useState<string | null>(null);
+  // Mirrors the server's rules (organizations/service.ts#removeTeamMember), which stay the
+  // authority — this only avoids offering a button the server would refuse.
+  const canRemove = (member: { userId: string; role: string }) =>
+    canInvite &&
+    member.userId !== user.userId &&
+    (member.role !== "owner" || hasRole("owner"));
 
   return (
     <div className="space-y-4">
@@ -70,6 +92,7 @@ export function TeamManagement() {
                   <th className="px-3 py-2.5 font-medium">{t("table.role")}</th>
                   <th className="px-3 py-2.5 font-medium">{t("table.status")}</th>
                   <th className="px-3 py-2.5 font-medium">{t("table.since")}</th>
+                  {canInvite && <th className="px-3 py-2.5 font-medium" />}
                 </tr>
               </thead>
               <tbody>
@@ -95,8 +118,25 @@ export function TeamManagement() {
                       </Badge>
                     </td>
                     <td className="px-3 py-3 text-2xs text-foreground-muted">
-                      {formatDate(member.joinedAt)}
+                      {formatDateInZone(member.joinedAt, timeZone, locale)}
                     </td>
+                    {canInvite && (
+                      <td className="px-3 py-3 text-end">
+                        {canRemove(member) && (
+                          <button
+                            type="button"
+                            aria-label={t("removeMember", { name: member.name })}
+                            onClick={() => {
+                              setActionError(null);
+                              setConfirmRemoval({ userId: member.userId, name: member.name });
+                            }}
+                            className="rounded-lg p-1.5 text-foreground-muted transition-colors hover:bg-surface-elevated hover:text-danger"
+                          >
+                            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
                 {data?.pendingInvitations.map((invite) => (
@@ -120,8 +160,26 @@ export function TeamManagement() {
                       </Badge>
                     </td>
                     <td className="px-3 py-3 text-2xs text-foreground-muted">
-                      {formatDate(invite.createdAt)}
+                      {formatDateInZone(invite.createdAt, timeZone, locale)}
                     </td>
+                    {canInvite && (
+                      <td className="px-3 py-3 text-end">
+                        <button
+                          type="button"
+                          aria-label={t("cancelInvite", { email: invite.email })}
+                          disabled={cancelInvite.isPending}
+                          onClick={() => {
+                            setActionError(null);
+                            cancelInvite.mutate(invite.id, {
+                              onError: (e) => setActionError(e.message),
+                            });
+                          }}
+                          className="rounded-lg p-1.5 text-foreground-muted transition-colors hover:bg-surface-elevated hover:text-danger"
+                        >
+                          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -130,7 +188,54 @@ export function TeamManagement() {
         </Card>
       )}
 
+      {actionError && (
+        <div role="alert" className="flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+          <span>{actionError}</span>
+        </div>
+      )}
+
       {inviting && <InviteMemberModal onClose={() => setInviting(false)} />}
+
+      {confirmRemoval && (
+        <Modal
+          open
+          onClose={() => setConfirmRemoval(null)}
+          title={t("removeModal.title")}
+          footer={
+            <>
+              <button
+                type="button"
+                onClick={() => setConfirmRemoval(null)}
+                className="h-9 rounded-lg border border-hairline bg-surface/60 px-3 text-sm text-foreground-secondary hover:text-foreground"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                type="button"
+                disabled={remove.isPending}
+                onClick={() =>
+                  remove.mutate(confirmRemoval.userId, {
+                    onSuccess: () => setConfirmRemoval(null),
+                    onError: (e) => {
+                      setActionError(e.message);
+                      setConfirmRemoval(null);
+                    },
+                  })
+                }
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-danger px-3.5 text-sm font-medium text-white hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+              >
+                {remove.isPending && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
+                {t("removeModal.confirm")}
+              </button>
+            </>
+          }
+        >
+          <p className="text-sm text-foreground-secondary">
+            {t("removeModal.body", { name: confirmRemoval.name })}
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }

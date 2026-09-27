@@ -22,6 +22,10 @@ export interface OrganizationRepository {
   addMember(userId: string, organizationId: string, role: string): Promise<void>;
   /** Every real member of one organization, for the Settings > Team page. */
   listMembers(organizationId: string): Promise<OrganizationMember[]>;
+  /** Removes one membership row (the user's account and their other organizations are untouched).
+   * False when they were not a member. */
+  removeMember(userId: string, organizationId: string): Promise<boolean>;
+  countMembersWithRole(organizationId: string, role: string): Promise<number>;
 }
 
 interface OrganizationRow {
@@ -130,6 +134,22 @@ class PostgresOrganizationRepository implements OrganizationRepository {
        ON CONFLICT (user_id, organization_id) DO NOTHING`,
       [userId, organizationId, role],
     );
+  }
+
+  async removeMember(userId: string, organizationId: string): Promise<boolean> {
+    const { rowCount } = await getPool().query(
+      `DELETE FROM user_organizations WHERE user_id = $1 AND organization_id = $2`,
+      [userId, organizationId],
+    );
+    return (rowCount ?? 0) > 0;
+  }
+
+  async countMembersWithRole(organizationId: string, role: string): Promise<number> {
+    const { rows } = await getPool().query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM user_organizations WHERE organization_id = $1 AND role = $2`,
+      [organizationId, role],
+    );
+    return Number(rows[0]?.n ?? 0);
   }
 
   async listMembers(organizationId: string): Promise<OrganizationMember[]> {

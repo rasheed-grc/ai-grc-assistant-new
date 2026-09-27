@@ -39,11 +39,15 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const membership = await assertMembership(actor, parsed.data.organizationId);
 
+    // Fail safe: a membership whose role is not a known role never becomes an owner session.
+    if (!isUserRole(membership.role)) {
+      throw new ValidationError("Your role in that organization is not recognised.");
+    }
     const nextPayload: SessionPayload = {
       ...session,
       organizationId: membership.id,
       organizationName: membership.name,
-      roles: isUserRole(membership.role) ? [membership.role] : ["owner"],
+      roles: [membership.role],
     };
     const token = await signSession(nextPayload);
 

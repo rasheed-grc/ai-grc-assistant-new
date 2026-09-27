@@ -5,6 +5,8 @@ import {
   fetchMyOrganizations,
   fetchOrganizationTeam,
   inviteTeamMember,
+  removeTeamMember,
+  cancelTeamInvitation,
   updateOrganization,
   type InviteTeamMemberResponse,
   type UpdateOrganizationInput,
@@ -42,5 +44,21 @@ export function useUpdateOrganization() {
   return useMutation<Organization, Error, UpdateOrganizationInput>({
     mutationFn: (input) => updateOrganization(input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ORGANIZATIONS_KEY }),
+  });
+}
+
+export function useRemoveTeamMember() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: (userId) => removeTeamMember(userId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: TEAM_KEY }),
+  });
+}
+
+export function useCancelTeamInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: (invitationId) => cancelTeamInvitation(invitationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: TEAM_KEY }),
   });
 }
