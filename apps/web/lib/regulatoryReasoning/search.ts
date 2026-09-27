@@ -23,6 +23,7 @@
  * without a measured, proven need").
  */
 
+import { arabicSearchTerms, needsArabicTranslation } from "./queryTranslation";
 import { getPool } from "@/lib/db/pool";
 
 export type RegulationDocumentType =
@@ -204,7 +205,10 @@ export async function searchRegulatorySources(
   query: string,
   limit = 6,
 ): Promise<RegulatorySourceHit[]> {
-  const keywords = extractKeywords(query);
+  // A non-Arabic question is searched through its Arabic equivalents (see queryTranslation.ts) —
+  // the corpus is Arabic, so English keywords can never match it.
+  const translated = await arabicSearchTerms(query);
+  const keywords = needsArabicTranslation(query) ? translated : extractKeywords(query);
   if (keywords.length === 0) return [];
 
   const { rows } = await getPool().query<RegulationSectionRow>(
