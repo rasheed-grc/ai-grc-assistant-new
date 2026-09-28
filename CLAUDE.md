@@ -1114,6 +1114,15 @@ pnpm --filter @grc/web build       # production build (requires AUTH_SECRET)
 CI (`.github/workflows/ci.yml`) runs the equivalent gates on every PR — a PR cannot merge
 until these are green (§23).
 
+### Deploying (النشر)
+
+[`RELEASE_PROCESS.md`](RELEASE_PROCESS.md) is the full, concrete playbook — environments
+(Production/Preview/local), the Vercel setup, branch protection, how to test and apply a
+database migration safely, and what to do if a deploy goes wrong. Short version: branch →
+PR → CI green → review → merge to `main` → Vercel deploys `main` to Production
+automatically → apply any migration to production by hand right after (§4 of that doc).
+Nobody pushes to `main` directly.
+
 ### What not to touch
 
 - **No real data, ever.** Never point a local `.env.local` at a production database, and
