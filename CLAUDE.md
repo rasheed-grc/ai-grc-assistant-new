@@ -39,6 +39,7 @@
 23. Way of Working (Workflow)
 24. Definition of Done
 25. Glossary
+26. Getting Started (Local Development & Partner Onboarding)
 
 ---
 
@@ -1047,6 +1048,89 @@ is not Done.
   tenant scoping enforced at every layer.
 - **Workspace** — The structured, object-centric environment where users run and steer
   missions — the primary UX, with chat as one tool inside it.
+
+---
+
+## 26. Getting Started (Local Development & Partner Onboarding)
+
+This section is the practical companion to everything above: how to get the product
+running on your machine. It does not restate the architecture — read §3–§5 for that.
+
+**What you'll actually run.** This is a large monorepo with several generations of work
+(`v2/`, `v3/`, `devteam/`) that are internal platform/architecture tracks governed by their
+own ADRs — you do not need them to see or test the product. The live, running application
+is **`apps/web`** (Next.js 15 + PostgreSQL/pgvector), which is what a browser hits. Start
+and stay there unless a task explicitly sends you elsewhere.
+
+### Prerequisites
+
+- Node **22** (see `.nvmrc`) + `pnpm`
+- Docker (for local Postgres + pgvector)
+- Python 3.12 / `uv` — only needed if you touch the Python packages, not for `apps/web`
+
+### Run it locally
+
+```bash
+pnpm install
+docker compose -f docker/compose/docker-compose.deps.yml up -d   # Postgres + pgvector
+cp apps/web/.env.example apps/web/.env.local                     # then fill in the values below
+pnpm --filter @grc/web db:migrate                                 # creates the schema + seeds the demo tenant
+pnpm --filter @grc/web dev                                        # http://localhost:3000
+```
+
+In `apps/web/.env.local`, at minimum set:
+
+- `DATABASE_URL` — defaults to `postgresql://postgres:postgres@localhost:5432/aigrc`, which
+  matches the Docker Compose service above.
+- `AUTH_SECRET` — any string ≥32 chars for local dev (`openssl rand -base64 48`).
+- `OPENAI_API_KEY` — needed for AI analysis/chat; without it the app falls back to a local,
+  no-egress provider (limited, but the app still runs).
+
+Everything else in `apps/web/.env.example` is optional for local testing (Resend email,
+Sentry, the separate `v2/apps/grc-api` integration, etc.) — each var documents in the file
+what breaks without it.
+
+### Test database & demo login
+
+`pnpm --filter @grc/web db:migrate` both creates the schema **and** seeds a demo tenant
+("Acme Financial Group") with one account per role — see
+[`apps/web/lib/db/migrations/0012_organizations.sql`](apps/web/lib/db/migrations/0012_organizations.sql)
+and `apps/web/lib/auth/users.ts`. Log in at `/login` with any of:
+
+`owner@acme.test`, `admin@acme.test`, `compliance@acme.test`, `risk@acme.test`,
+`analyst@acme.test`, `auditor@acme.test`, `viewer@acme.test` — password `GrcDemo!2026`.
+
+These are fake, local-only seed credentials — never real user data.
+
+### Running the tests
+
+```bash
+pnpm --filter @grc/web typecheck   # tsc --noEmit
+pnpm --filter @grc/web lint        # eslint
+pnpm --filter @grc/web test        # eval suites (tests/eval/*.ts)
+pnpm --filter @grc/web build       # production build (requires AUTH_SECRET)
+```
+
+CI (`.github/workflows/ci.yml`) runs the equivalent gates on every PR — a PR cannot merge
+until these are green (§23).
+
+### What not to touch
+
+- **No real data, ever.** Never point a local `.env.local` at a production database, and
+  never commit one — `.env*` is gitignored everywhere in this repo (`!.env.example` is the
+  only exception). If you're unsure whether a database is "real," don't connect to it.
+- **Don't push to `main` directly.** Every change goes through a PR (§23) — branch, commit,
+  push, open a PR.
+- **Don't touch CI/CD, deploy config, or secrets** (`.github/workflows/`, Vercel project
+  settings, production environment variables) without asking first.
+- **`v2/`, `v3/`, and `devteam/` are separate tracks**, each with its own frozen core and
+  ADR-gated change process (see their own READMEs/ADRs) — not where product/UI bug fixes
+  belong, and not to be modified casually.
+- **Don't merge code you can't explain** (§23) — this applies equally to AI-assisted
+  changes from either of us.
+
+If something here goes stale (a script renames, a port changes), fix this section in the
+same PR that changes the underlying thing — don't let them drift apart.
 
 ---
 
