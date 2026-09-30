@@ -27,8 +27,9 @@ export function formatBytes(bytes: number): string {
 }
 
 /** Short absolute date, e.g. "29 Jun 2026". Deterministic (UTC) to avoid SSR hydration drift. */
-export function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
+export function formatDate(iso: string, locale: string = "en"): string {
+  // Latin digits in Arabic too, matching the rest of the app (lib/preferences/format.ts).
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA-u-nu-latn" : "en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",

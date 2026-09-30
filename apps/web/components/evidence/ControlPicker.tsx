@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { FRAMEWORKS } from "@/lib/frameworks/catalog";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,7 @@ interface ControlPickerProps {
 
 /** Multi-select of framework controls from the catalog, grouped by framework. */
 export function ControlPicker({ value, onChange }: ControlPickerProps) {
+  const t = useTranslations("common");
   const [query, setQuery] = useState("");
   const selected = useMemo(() => new Set(value), [value]);
 
@@ -34,7 +36,7 @@ export function ControlPicker({ value, onChange }: ControlPickerProps) {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search controls…"
+          placeholder={t("searchControls")}
           className="h-9 w-full bg-transparent ps-8 pe-3 text-sm text-foreground outline-none placeholder:text-foreground-muted focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-inset"
         />
       </div>

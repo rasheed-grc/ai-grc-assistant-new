@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Popover } from "@/components/ui/Popover";
 import { useSession } from "@/components/auth/SessionProvider";
-import { primaryRole, ROLE_META } from "@/lib/auth/roles";
+import { primaryRole } from "@/lib/auth/roles";
 
 // "Preferences" is intentionally omitted — there is no preferences backend yet (no
 // per-user settings to store), so it stays hidden rather than linking to an empty page
@@ -18,8 +18,9 @@ const MENU = [
 export function UserMenu() {
   const { user, signOut, isSigningOut } = useSession();
   const role = primaryRole(user.roles);
-  const roleLabel = role ? ROLE_META[role].label : "Member";
   const t = useTranslations("userMenu");
+  const tRoles = useTranslations("teamManagement.roles");
+  const roleLabel = tRoles(role ?? "member");
 
   return (
     <Popover

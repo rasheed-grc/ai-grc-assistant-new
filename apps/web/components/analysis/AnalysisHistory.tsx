@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FileText, Sparkles } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -16,6 +16,7 @@ import { cn, formatDate, formatNumber } from "@/lib/utils";
 
 export function AnalysisHistory() {
   const t = useTranslations("analysisHistory");
+  const locale = useLocale();
   const tCategory = useTranslations("documentCategories");
   const { data: analyses, isLoading, isError, error } = useAnalyses();
   const { data: documents } = useDocuments();
@@ -173,7 +174,7 @@ export function AnalysisHistory() {
                       {formatNumber(analysis.findings.length)}
                     </td>
                     <td className="px-3 py-3 text-foreground-muted">
-                      {formatDate(analysis.createdAt)}
+                      {formatDate(analysis.createdAt, locale)}
                     </td>
                     <td className="px-5 py-3 text-end">
                       <Link

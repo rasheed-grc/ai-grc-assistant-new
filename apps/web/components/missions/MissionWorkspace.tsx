@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge, type Tone } from "@/components/ui/Badge";
+import { MarkdownText } from "@/components/ui/MarkdownText";
 import { useMission, useMissionResult, useRunMission } from "@/hooks/useMissions";
 import { isMissionStatus, type MissionStatus } from "@/lib/missions/types";
 import { labelOrIdentifier } from "@/lib/planExecution/labels";
@@ -77,7 +78,7 @@ function StepRow({
               </pre>
             </details>
           ) : (
-            <p className="mt-1 whitespace-pre-wrap text-xs text-foreground-secondary">{summary}</p>
+            <MarkdownText text={summary} className="mt-1 text-xs" />
           ))}
       </div>
     </div>
@@ -304,9 +305,7 @@ function MissionResultCard({ missionId }: { missionId: string }) {
                 </pre>
               </details>
             ) : (
-              <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground-secondary">
-                {section.body}
-              </p>
+              <MarkdownText text={section.body} className="mt-1.5 text-sm" />
             )}
             {section.citations.length > 0 && (
               <p className="mt-1.5 text-2xs text-foreground-muted">

@@ -1,6 +1,8 @@
 {
   "common": {
     "appName": "رشيد",
+    "close": "إغلاق",
+    "searchControls": "ابحث في الضوابط…",
     "language": "اللغة",
     "switchToArabic": "التبديل إلى العربية",
     "switchToEnglish": "Switch to English"
@@ -209,7 +211,8 @@
     "complianceProgress": {
       "title": "تقدم الامتثال",
       "description": "التغطية مقابل المستهدف حسب الإطار",
-      "target": "المستهدف"
+      "target": "المستهدف",
+      "empty": "لا توجد أطر مطبّقة بعد — أكمل برنامج الحوكمة أو اربط أدلة بضوابط لتظهر هنا."
     },
     "riskDistribution": {
       "title": "توزيع المخاطر",
@@ -697,6 +700,8 @@
     "title": "تسجيل الدخول إلى رشيد",
     "subtitle": "الحوكمة · المخاطر · الامتثال · الذكاء الاصطناعي",
     "signInFailed": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "tooManyAttempts": "محاولات كثيرة. يرجى المحاولة مرة أخرى بعد قليل.",
     "networkError": "خطأ في الشبكة. يرجى التحقق من الاتصال والمحاولة مرة أخرى.",
     "emailLabel": "البريد الإلكتروني للعمل",
     "emailPlaceholder": "you@company.com",
@@ -884,7 +889,7 @@
     "openGapsLabel": "الفجوات المفتوحة",
     "openGapsDescription": "ضوابط بلا أدلة مرتبطة",
     "evidenceArtifactsLabel": "أدلة الإثبات",
-    "evidenceArtifactsSummary": "عبر {count} إطارًا"
+    "evidenceArtifactsSummary": "عبر {count, plural, zero {0 أطر} one {إطار واحد} two {إطارين} few {# أطر} many {# إطارًا} other {# إطار}}"
   },
   "frameworksPage": {
     "eyebrow": "الحوكمة",
@@ -987,9 +992,19 @@
       "auditor": "مدقق",
       "viewer": "مشاهد"
     },
+    "roleDescriptions": {
+      "owner": "صلاحية كاملة على منشأتك: الإعدادات والفريق والبيانات والاعتمادات.",
+      "admin": "صلاحيات إدارية كاملة داخل المنشأة.",
+      "compliance_manager": "يدير دورة الحوكمة والامتثال التشغيلية، بما فيها الاعتماد والنشر.",
+      "risk_manager": "يمتلك سجل المخاطر بالكامل ويمكنه تشغيل المهام.",
+      "analyst": "ينشئ الأعمال التشغيلية وينفّذها؛ لا يعتمد ولا ينشر ولا يحذف.",
+      "auditor": "اطلاع فقط على كل شيء، بما فيه سجل التدقيق.",
+      "viewer": "اطلاع فقط على البيانات التشغيلية والمرجعية."
+    },
     "modal": {
       "inviteTitle": "دعوة زميل",
-      "successTitle": "تم إرسال الدعوة"
+      "successTitle": "تم إرسال الدعوة",
+      "createdTitle": "تم إنشاء الدعوة"
     },
     "form": {
       "email": "البريد الإلكتروني للعمل",
@@ -1277,7 +1292,14 @@
     "compliance": "الامتثال",
     "risk": "المخاطر",
     "weightedAcrossFrameworks": "مرجّح عبر الأطر المكتملة",
-    "maturityLevel": "نضج {level}",
+    "maturityLevel": "مستوى النضج: {level}",
+    "maturityLevels": {
+      "Initial": "أولي",
+      "Developing": "قيد التطوير",
+      "Defined": "محدد",
+      "Managed": "مُدار",
+      "Optimized": "مُحسَّن"
+    },
     "findings": "النتائج",
     "noFindings": "لا توجد نتائج مسجّلة.",
     "severity": {
@@ -1554,6 +1576,7 @@
     "passwordLabel": "كلمة المرور",
     "confirmPasswordLabel": "تأكيد كلمة المرور",
     "passwordMismatch": "كلمتا المرور غير متطابقتين.",
+    "passwordTooShort": "يجب ألا تقل كلمة المرور عن 10 أحرف.",
     "submit": "إنشاء الحساب",
     "submitting": "جارٍ إنشاء الحساب…",
     "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
@@ -2048,6 +2071,7 @@
     "passwordLabel": "كلمة المرور الجديدة",
     "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
     "passwordMismatch": "كلمتا المرور غير متطابقتين.",
+    "passwordTooShort": "يجب ألا تقل كلمة المرور عن 10 أحرف.",
     "submit": "إعادة تعيين كلمة المرور",
     "submitting": "جارٍ إعادة التعيين…",
     "successMessage": "تمت إعادة تعيين كلمة المرور الخاصة بك. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
@@ -2078,6 +2102,8 @@
     "newPasswordLabel": "كلمة المرور الجديدة",
     "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
     "passwordMismatch": "كلمتا المرور غير متطابقتين.",
+    "passwordTooShort": "يجب ألا تقل كلمة المرور الجديدة عن 10 أحرف.",
+    "currentPasswordIncorrect": "كلمة المرور الحالية غير صحيحة.",
     "passwordChanged": "تم تغيير كلمة المرور الخاصة بك.",
     "save": "تغيير كلمة المرور",
     "saving": "جارٍ الحفظ…",

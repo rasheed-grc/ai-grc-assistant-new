@@ -276,7 +276,8 @@ function InviteMemberModal({ onClose }: { onClose: () => void }) {
       <Modal
         open
         onClose={onClose}
-        title={t("modal.successTitle")}
+        // "Sent" only when the email actually went out; otherwise the link is the only way in.
+        title={t(result.emailSent ? "modal.successTitle" : "modal.createdTitle")}
         footer={
           <button
             type="button"

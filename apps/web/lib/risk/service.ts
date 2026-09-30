@@ -105,6 +105,15 @@ export async function updateRisk(
 ): Promise<Risk> {
   if (!can(actor.roles, "update", "risk"))
     throw new ForbiddenError("You are not permitted to edit risks.");
+  // An accepted risk still reads "accepted by <approver>"; only someone who could have accepted it
+  // may change the scores or plan that acceptance covers.
+  const existing = await riskRepository.get(actor.tenantId, id);
+  if (!existing) throw new NotFoundError("Risk not found.");
+  if (existing.status === "accepted" && !can(actor.roles, "approve", "risk")) {
+    throw new ForbiddenError(
+      "Changing an accepted risk requires a Risk Manager, Compliance Manager, or Administrator.",
+    );
+  }
   const updated = await riskRepository.update(actor.tenantId, id, (risk) => ({
     ...risk,
     title: input.title?.trim() || risk.title,

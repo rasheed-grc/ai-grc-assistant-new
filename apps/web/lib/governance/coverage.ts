@@ -4,7 +4,8 @@
  * the cross-cutting relationship that powers governance dashboards. Tenant-scoped. Node-only.
  */
 
-import { ForbiddenError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, UpstreamError } from "@/lib/errors";
+import { getActivePlan } from "@/lib/planExecution/service";
 import { can } from "@/lib/auth/permissions";
 import type { ActorContext } from "@/lib/auth/actor";
 import { FRAMEWORKS } from "@/lib/frameworks/catalog";
@@ -96,6 +97,43 @@ export async function computeCoverage(actor: ActorContext): Promise<CoverageRepo
       coveragePct: pct(coveredControls, totalControls),
       gaps: totalControls - coveredControls,
       evidenceCount: evidence.length,
+    },
+  };
+}
+
+/**
+ * Coverage over the frameworks THIS organization has taken on — the ones its Governance Program
+ * identified, plus any it has linked evidence to — rather than the whole catalog. The catalog is the
+ * same for every organization, so headline numbers built on it (e.g. "29 open findings" for an
+ * organization that has done nothing yet) read identically in every workspace.
+ */
+export async function computeOrganizationCoverage(actor: ActorContext): Promise<CoverageReport> {
+  const report = await computeCoverage(actor);
+
+  const active = new Set(
+    report.frameworks.filter((framework) => framework.covered > 0).map((framework) => framework.id),
+  );
+  try {
+    const plan = await getActivePlan(actor);
+    for (const inferred of plan?.plan.inferredFrameworks ?? []) {
+      active.add(inferred.frameworkId.replace(/^framework:/, ""));
+    }
+  } catch (error) {
+    // grc-api down or misrouted: the evidence-linked frameworks still stand on their own.
+    if (!(error instanceof UpstreamError || error instanceof NotFoundError)) throw error;
+  }
+
+  const frameworks = report.frameworks.filter((framework) => active.has(framework.id));
+  const totalControls = frameworks.reduce((sum, f) => sum + f.total, 0);
+  const coveredControls = frameworks.reduce((sum, f) => sum + f.covered, 0);
+  return {
+    frameworks,
+    overall: {
+      totalControls,
+      coveredControls,
+      coveragePct: pct(coveredControls, totalControls),
+      gaps: totalControls - coveredControls,
+      evidenceCount: report.overall.evidenceCount,
     },
   };
 }

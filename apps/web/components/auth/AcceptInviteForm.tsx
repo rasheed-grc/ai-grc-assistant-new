@@ -54,6 +54,11 @@ export function AcceptInviteForm() {
       setError(t("passwordMismatch"));
       return;
     }
+    // Same minimum as the server, said in the page's language.
+    if (password.length < 10) {
+      setError(t("passwordTooShort"));
+      return;
+    }
     setIsSubmitting(true);
     try {
       await acceptInvitation(token, { name, password });

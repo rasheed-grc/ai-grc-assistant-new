@@ -8,11 +8,18 @@ import { CoverageBar } from "@/components/governance/CoverageBar";
 import { LOGIN_PATH } from "@/lib/auth/config";
 import { getActor } from "@/lib/auth/actor";
 import { computeCoverage, findFrameworkCoverage } from "@/lib/governance/coverage";
+import { FRAMEWORKS } from "@/lib/frameworks/catalog";
 import { pageTitle } from "@/lib/pageMetadata";
 import { cn } from "@/lib/utils";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return pageTitle("frameworksPage.detailTitle");
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const framework = FRAMEWORKS.find((candidate) => candidate.id === id);
+  return framework ? { title: `${framework.shortName} · Rasheed` } : pageTitle("frameworksPage.title");
 }
 
 export default async function FrameworkDetailPage({ params }: { params: Promise<{ id: string }> }) {

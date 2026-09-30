@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, FileText, Loader2, Plus, ShieldCheck, Trash2, TriangleAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
@@ -127,6 +127,7 @@ export function PoliciesWorkspace(permissions: PolicyPermissions) {
 
 function PolicyRow({ policy, onOpen }: { policy: PolicySummary; onOpen: () => void }) {
   const t = useTranslations("policiesWorkspace");
+  const locale = useLocale();
   return (
     <Card>
       <div className="flex w-full items-center gap-3">
@@ -153,7 +154,7 @@ function PolicyRow({ policy, onOpen }: { policy: PolicySummary; onOpen: () => vo
               {t("rowMeta", {
                 owner: policy.ownerName,
                 count: policy.controlCount,
-                date: formatDate(policy.updatedAt),
+                date: formatDate(policy.updatedAt, locale),
               })}
             </p>
           </div>
@@ -276,6 +277,7 @@ function PolicyDetailModal({
   onClose: () => void;
 }) {
   const t = useTranslations("policiesWorkspace");
+  const locale = useLocale();
   const { user } = useSession();
   const { data: policy, isLoading, isError, isFetching } = usePolicy(id);
   const update = useUpdatePolicy();
@@ -323,6 +325,10 @@ function PolicyDetailModal({
   }
 
   const bodyValue = body ?? policy.body ?? "";
+  // A published policy is an approved one: changing or withdrawing it is the approver's call
+  // (mirrors lib/policies/service.ts).
+  const canEdit =
+    policy.status === "published" ? permissions.canPublish : permissions.canUpdate;
   const transitions = POLICY_TRANSITIONS[policy.status];
 
   async function doTransition(status: PolicyStatus) {
@@ -360,7 +366,7 @@ function PolicyDetailModal({
           <div className="flex items-center gap-2">
             {transitions.map((status) => {
               const isPublish = status === "published";
-              const allowed = isPublish ? permissions.canPublish : permissions.canUpdate;
+              const allowed = isPublish ? permissions.canPublish : canEdit;
               if (!allowed) return null;
               return (
                 <button
@@ -399,7 +405,7 @@ function PolicyDetailModal({
           {policy.approvedByName && (
             <span className="text-2xs text-success">
               {t("publishedBy", { name: policy.approvedByName })}
-              {policy.approvedAt ? ` · ${formatDate(policy.approvedAt)}` : ""}
+              {policy.approvedAt ? ` · ${formatDate(policy.approvedAt, locale)}` : ""}
             </span>
           )}
         </div>
@@ -407,7 +413,7 @@ function PolicyDetailModal({
 
         <div>
           <FieldLabel>{t("bodyLabel")}</FieldLabel>
-          {permissions.canUpdate ? (
+          {canEdit ? (
             <>
               <textarea
                 value={bodyValue}
@@ -439,7 +445,7 @@ function PolicyDetailModal({
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <FieldLabel>{t("mappedControlsLabel")}</FieldLabel>
-            {permissions.canUpdate && !editingControls && (
+            {canEdit && !editingControls && (
               <button
                 type="button"
                 onClick={() => {

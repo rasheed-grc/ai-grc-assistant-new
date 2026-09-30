@@ -3,20 +3,20 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getActor } from "@/lib/auth/actor";
-import { computeCoverage } from "@/lib/governance/coverage";
+import { computeOrganizationCoverage } from "@/lib/governance/coverage";
 
 const FULL_COVERAGE_TARGET = 100;
 
 /** Real per-framework control coverage (post-v2.0.1 audit; previously a static illustrative
- * dataset). Same `computeCoverage` source `ActiveFrameworks`/`Controls` already use, so the
- * numbers agree everywhere on the dashboard. No trend indicator: there is no historical
+ * dataset). Same organization-scoped source as `ActiveFrameworks`/`StatCards`, so the numbers agree
+ * everywhere on the dashboard. No trend indicator: there is no historical
  * coverage snapshot to compare against, so none is fabricated. */
 export async function ComplianceProgress() {
   const t = await getTranslations("dashboard.complianceProgress");
   const actor = await getActor();
   if (!actor) return null;
 
-  const coverage = await computeCoverage(actor);
+  const coverage = await computeOrganizationCoverage(actor);
 
   return (
     <Card>
@@ -30,6 +30,9 @@ export async function ComplianceProgress() {
           </span>
         }
       />
+      {coverage.frameworks.length === 0 && (
+        <p className="mt-5 text-xs text-foreground-muted">{t("empty")}</p>
+      )}
       <div className="mt-5 space-y-5">
         {coverage.frameworks.map((framework) => {
           const tone =

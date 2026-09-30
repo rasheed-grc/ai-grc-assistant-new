@@ -16,6 +16,7 @@ import { policyRepository } from "@/lib/policies/repository";
 import { POLICY_STATUSES, type Policy } from "@/lib/policies/types";
 import { getProgramStatus, type ProgramStatus } from "@/lib/planExecution/programStatus";
 import type { PlanDetail, PlanItem, Priority } from "@/lib/planExecution/types";
+import { localisedTitle } from "@/lib/planExecution/localiseTitle";
 import { documentRepository } from "@/lib/documents/repository";
 import type { DocumentRecord } from "@/lib/documents/types";
 import { policyRecommendationRepository } from "@/lib/policyRecommendations/repository";
@@ -78,6 +79,10 @@ async function executiveContent(actor: ActorContext, l: ReportLabels, locale: Ap
   const topRisks = [...risks].sort((a, b) => b.inherentScore - a.inherentScore).slice(0, 5);
 
   const documentReview = await documentReviewSection(documents, locale, l);
+  // Plan items carry a rule-engine key; the stored English title is only the fallback.
+  const seed = await getTranslations({ locale, namespace: "planSeed" });
+  const titleOf = (item: PlanItem) =>
+    localisedTitle(item, (name) => seed.has(name as never), (name) => seed(name as never));
   const references = referencesSection(recommendations, l);
 
   const sections: ReportSection[] = [
@@ -111,10 +116,10 @@ async function executiveContent(actor: ActorContext, l: ReportLabels, locale: Ap
     governanceStatusSection(programStatus, locale, l),
     policyStatusSection(policies, l),
     documentReview,
-    actionPlanSection(programStatus.plan, locale, l),
+    actionPlanSection(programStatus.plan, locale, l, titleOf),
     keyFindingsSection(programStatus.plan, l),
     recommendationsSection(recommendations, l),
-    nextStepsSection(programStatus, l),
+    nextStepsSection(programStatus, l, titleOf),
     ...(references ? [references] : []),
   ];
 
@@ -194,7 +199,12 @@ async function documentReviewSection(
   };
 }
 
-function actionPlanSection(plan: PlanDetail | null, locale: AppLocale, l: ReportLabels): ReportSection {
+function actionPlanSection(
+  plan: PlanDetail | null,
+  locale: AppLocale,
+  l: ReportLabels,
+  titleOf: (item: PlanItem) => string,
+): ReportSection {
   if (plan === null) {
     return { heading: l.sections.actionPlan, narrative: l.governanceNotStarted };
   }
@@ -206,7 +216,7 @@ function actionPlanSection(plan: PlanDetail | null, locale: AppLocale, l: Report
     return { heading: l.sections.actionPlan, narrative: l.noOpenActionItems };
   }
   const rows = open.map((item) => [
-    item.title,
+    titleOf(item),
     l.severity[item.priority],
     l.planItemStatus[item.status],
     formatReportDate(item.dueAt, locale, l.noDueDate),
@@ -263,7 +273,11 @@ function recommendationsSection(recommendations: PolicyRecommendation[], l: Repo
   };
 }
 
-function nextStepsSection(status: ProgramStatus, l: ReportLabels): ReportSection {
+function nextStepsSection(
+  status: ProgramStatus,
+  l: ReportLabels,
+  titleOf: (item: PlanItem) => string,
+): ReportSection {
   if (status.plan === null) {
     return { heading: l.sections.nextSteps, narrative: l.nextStepsCompleteAssessment };
   }
@@ -274,7 +288,7 @@ function nextStepsSection(status: ProgramStatus, l: ReportLabels): ReportSection
   if (open.length === 0) {
     return { heading: l.sections.nextSteps, narrative: l.nextStepsNoneUrgent };
   }
-  const lines = open.map((item, index) => `${index + 1}. ${item.title}`);
+  const lines = open.map((item, index) => `${index + 1}. ${titleOf(item)}`);
   const narrative = [l.nextStepsIntro, ...lines, status.state === "reviewDue" ? l.nextStepsReviewDue : null]
     .filter(Boolean)
     .join("\n");

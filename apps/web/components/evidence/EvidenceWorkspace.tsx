@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Download,
   FileText,
@@ -192,6 +192,7 @@ function EvidenceRow({
   onDelete: () => void;
 }) {
   const t = useTranslations("evidenceWorkspace");
+  const locale = useLocale();
   const [confirming, setConfirming] = useState(false);
   return (
     <Card className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -226,7 +227,7 @@ function EvidenceRow({
             })}
           </p>
           <p className="text-2xs text-foreground-muted">
-            {t("updatedOn", { date: formatDate(item.updatedAt) })}
+            {t("updatedOn", { date: formatDate(item.updatedAt, locale) })}
           </p>
         </div>
         {item.tags.length > 0 && (
@@ -435,6 +436,7 @@ function EvidenceDetailModal({
   onClose: () => void;
 }) {
   const t = useTranslations("evidenceWorkspace");
+  const locale = useLocale();
   const { user } = useSession();
   const { data: evidence, isLoading, isError, isFetching } = useEvidenceItem(id);
   const addVersion = useAddEvidenceVersion();
@@ -579,7 +581,7 @@ function EvidenceDetailModal({
                     <p className="truncate text-sm text-foreground">{version.fileName}</p>
                     <p className="text-2xs text-foreground-muted">
                       {formatBytes(version.sizeBytes)} · {version.uploadedByName} ·{" "}
-                      {formatDate(version.createdAt)}
+                      {formatDate(version.createdAt, locale)}
                       {version.id === evidence.currentVersionId && ` · ${t("current")}`}
                     </p>
                   </div>

@@ -6,7 +6,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { getActor } from "@/lib/auth/actor";
-import { computeCoverage, type FrameworkCoverage } from "@/lib/governance/coverage";
+import { computeOrganizationCoverage, type FrameworkCoverage } from "@/lib/governance/coverage";
 
 type FrameworkStatus = "compliant" | "in_progress" | "at_risk";
 
@@ -79,7 +79,7 @@ function FrameworkCard({
 export async function ActiveFrameworks() {
   const t = await getTranslations("dashboard.activeFrameworks");
   const actor = await getActor();
-  const coverage = actor ? await computeCoverage(actor) : null;
+  const coverage = actor ? await computeOrganizationCoverage(actor) : null;
   const hasEvidence = (coverage?.overall.evidenceCount ?? 0) > 0;
 
   return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, Plus, ShieldAlert, Trash2, TriangleAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
@@ -502,6 +502,7 @@ function RiskDetailModal({
   onClose: () => void;
 }) {
   const t = useTranslations("riskRegister");
+  const locale = useLocale();
   const { user } = useSession();
   const likelihoodLabels = t.raw("likelihoodLabels") as string[];
   const impactLabels = t.raw("impactLabels") as string[];
@@ -560,6 +561,10 @@ function RiskDetailModal({
       setError(t("errors.transitionFailed"));
     }
   }
+
+  // An accepted risk carries someone's sign-off; only a person who could accept it may change what
+  // was accepted (mirrors lib/risk/service.ts).
+  const canEdit = risk.status === "accepted" ? permissions.canAccept : permissions.canUpdate;
 
   async function setResidual(field: "residualLikelihood" | "residualImpact", value: number) {
     await update.mutateAsync({ id, patch: { [field]: value } });
@@ -635,7 +640,7 @@ function RiskDetailModal({
           {risk.acceptedByName && (
             <span className="text-2xs text-warning">
               {t("acceptedBy", { name: risk.acceptedByName })}
-              {risk.acceptedAt ? ` · ${formatDate(risk.acceptedAt)}` : ""}
+              {risk.acceptedAt ? ` · ${formatDate(risk.acceptedAt, locale)}` : ""}
             </span>
           )}
         </div>
@@ -652,7 +657,7 @@ function RiskDetailModal({
               <span className="text-2xl font-semibold text-foreground">{inherent}</span>
               <SeverityBadge severity={severityOf(inherent)} score={inherent} />
             </div>
-            {permissions.canUpdate && (
+            {canEdit && (
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <label className="block">
                   <FieldLabel>{t("form.likelihood")}</FieldLabel>
@@ -692,7 +697,7 @@ function RiskDetailModal({
                 <span className="text-sm text-foreground-muted">{t("notAssessed")}</span>
               )}
             </div>
-            {permissions.canUpdate && (
+            {canEdit && (
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <label className="block">
                   <FieldLabel>{t("form.likelihood")}</FieldLabel>
@@ -717,7 +722,7 @@ function RiskDetailModal({
 
         <div>
           <FieldLabel>{t("form.mitigationPlan")}</FieldLabel>
-          {permissions.canUpdate ? (
+          {canEdit ? (
             <>
               <textarea
                 value={planValue}

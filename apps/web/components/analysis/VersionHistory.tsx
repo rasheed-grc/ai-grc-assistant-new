@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, Loader2, Pencil, Trash2, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { TrendPill } from "@/components/ui/TrendPill";
@@ -20,6 +20,7 @@ interface VersionHistoryProps {
 /** Score-delta comparison between consecutive versions — not a full document text diff. */
 export function VersionHistory({ documentId, versions, selectedId, onSelect }: VersionHistoryProps) {
   const t = useTranslations("versionHistory");
+  const locale = useLocale();
   const rename = useRenameAnalysis(documentId);
   const del = useDeleteAnalysis(documentId);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -104,7 +105,7 @@ export function VersionHistory({ documentId, versions, selectedId, onSelect }: V
                 >
                   <p className="truncate text-sm font-medium text-foreground">{version.title}</p>
                   <p className="text-2xs text-foreground-muted">
-                    v{version.version} · {formatDate(version.createdAt)}
+                    v{version.version} · {formatDate(version.createdAt, locale)}
                     {version.status !== "processed" ? ` · ${version.status}` : ""}
                   </p>
                 </button>

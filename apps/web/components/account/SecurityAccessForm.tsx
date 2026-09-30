@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { useSession } from "@/components/auth/SessionProvider";
-import { ROLE_META, primaryRole } from "@/lib/auth/roles";
-import { changeAccountPassword } from "@/lib/account/client";
+import { primaryRole } from "@/lib/auth/roles";
+import { AccountRequestError, changeAccountPassword } from "@/lib/account/client";
 
 const inputClass =
   "h-10 w-full rounded-lg border border-hairline bg-surface/60 px-3 text-sm text-foreground outline-none transition-colors duration-150 focus:border-hairline-strong focus:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-70";
@@ -19,6 +19,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 export function SecurityAccessForm() {
   const t = useTranslations("securityAccessPage");
+  const tTeam = useTranslations("teamManagement");
   const { user } = useSession();
   const role = primaryRole(user.roles);
 
@@ -37,6 +38,11 @@ export function SecurityAccessForm() {
       setError(t("passwordMismatch"));
       return;
     }
+    // Same minimum as the server (lib/account/service.ts), said in the page's language.
+    if (newPassword.length < 10) {
+      setError(t("passwordTooShort"));
+      return;
+    }
     setIsSubmitting(true);
     try {
       await changeAccountPassword(currentPassword, newPassword);
@@ -45,7 +51,14 @@ export function SecurityAccessForm() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : t("genericError"));
+      setError(
+        submitError instanceof AccountRequestError &&
+          submitError.code === "current_password_incorrect"
+          ? t("currentPasswordIncorrect")
+          : submitError instanceof Error
+            ? submitError.message
+            : t("genericError"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -66,10 +79,10 @@ export function SecurityAccessForm() {
             {role && (
               <div className="mt-2.5 flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-2xs font-medium text-accent-foreground">
-                  {ROLE_META[role].label}
+                  {tTeam(`roles.${role}`)}
                 </span>
                 <span className="text-2xs text-foreground-muted">
-                  {ROLE_META[role].description}
+                  {tTeam(`roleDescriptions.${role}`)}
                 </span>
               </div>
             )}

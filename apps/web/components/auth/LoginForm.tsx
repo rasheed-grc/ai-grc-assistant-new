@@ -36,8 +36,14 @@ export function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
       if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        setError(data.error ?? t("signInFailed"));
+        // The API's messages are English; the ones a person can hit are shown in the page language.
+        setError(
+          response.status === 401
+            ? t("invalidCredentials")
+            : response.status === 429
+              ? t("tooManyAttempts")
+              : t("signInFailed"),
+        );
         setIsSubmitting(false);
         return;
       }
