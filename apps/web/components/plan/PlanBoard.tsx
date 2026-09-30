@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, Sparkles, TriangleAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -13,11 +13,14 @@ import { VersionHistory } from "./VersionHistory";
 import { labelOrIdentifier } from "@/lib/planExecution/labels";
 import { groupItems, type GroupBy } from "@/lib/planExecution/grouping";
 import type { PlanItemStatus } from "@/lib/planExecution/types";
+import { formatCalendarDate } from "@/lib/preferences/format";
+import type { AppLocale } from "@/i18n/routing";
 
 type StatusFilter = "all" | PlanItemStatus;
 
 export function PlanBoard() {
   const t = useTranslations("planExecution");
+  const locale = useLocale() as AppLocale;
   const { data: detail, isLoading, isError } = useActivePlan();
   const [groupBy, setGroupBy] = useState<GroupBy>("timeline");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -78,9 +81,11 @@ export function PlanBoard() {
           <Badge tone="accent">{t("planVersion", { version: plan.version })}</Badge>
           {plan.createdAt && (
             <span className="text-2xs text-foreground-muted">
-              {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(
-                new Date(plan.createdAt * 1000),
-              )}
+              {formatCalendarDate(new Date(plan.createdAt * 1000), locale, {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
             </span>
           )}
         </div>

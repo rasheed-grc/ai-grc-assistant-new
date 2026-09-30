@@ -7,6 +7,11 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import type { InferredFramework } from "@/lib/planExecution/types";
 
+/** `framework:nist_csf` → `NIST CSF`. Framework identifiers are acronyms, so this is the name. */
+function frameworkName(frameworkId: string): string {
+  return frameworkId.replace(/^framework:/, "").replace(/_/g, " ").toUpperCase();
+}
+
 /**
  * Section 9 (ADR 0066 §4): the ONLY place a framework is ever named. Sections 1–8 never say
  * "NIST" or "ISO 27001" — they say the business was analyzed against the best practices that
@@ -43,7 +48,9 @@ export function MethodologySection({ frameworks }: { frameworks: InferredFramewo
             <ul className="mt-3 space-y-2 border-t border-hairline pt-3">
               {frameworks.map((framework) => (
                 <li key={framework.frameworkId} className="flex items-start justify-between gap-3 text-sm">
-                  <span className="font-medium text-foreground">{framework.frameworkId}</span>
+                  <span className="font-medium text-foreground" dir="ltr">
+                    {frameworkName(framework.frameworkId)}
+                  </span>
                   <Badge tone="neutral">{Math.round(framework.confidence * 100)}%</Badge>
                 </li>
               ))}
