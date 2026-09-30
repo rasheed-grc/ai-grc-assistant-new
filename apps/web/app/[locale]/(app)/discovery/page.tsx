@@ -6,7 +6,7 @@ import { redirect } from "@/i18n/navigation";
 import { DiscoveryFlow } from "@/components/discovery/DiscoveryFlow";
 import { getActivePlan } from "@/lib/planExecution/service";
 import { findOpenSectorInterview } from "@/lib/sectorInterview/service";
-import { UpstreamError } from "@/lib/errors";
+import { NotFoundError, UpstreamError } from "@/lib/errors";
 import { pageTitle } from "@/lib/pageMetadata";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -46,7 +46,9 @@ export default async function DiscoveryPage({
       // This block only decides whether to SKIP the page; it must never take the page down. The
       // proxied call has already logged the upstream failure, and DiscoveryFlow surfaces a real
       // message if the backend is still unavailable when the customer acts.
-      if (!(error instanceof UpstreamError)) throw error;
+      // Neither lookup 404s for "nothing found" (both answer null), so a 404 here means grc-api
+      // is misrouted — the same "cannot decide" as unreachable.
+      if (!(error instanceof UpstreamError || error instanceof NotFoundError)) throw error;
     }
     if (redirectToPlan) {
       const locale = await getLocale();

@@ -14,6 +14,9 @@ import { GovernanceActivity } from "@/components/plan/GovernanceActivity";
 import { EvidenceCoverage } from "@/components/plan/EvidenceCoverage";
 import { MaturityJourney } from "@/components/plan/MaturityJourney";
 import { PlanBoard } from "@/components/plan/PlanBoard";
+import { Card } from "@/components/ui/Card";
+import { TriangleAlert } from "lucide-react";
+import { NotFoundError, UpstreamError } from "@/lib/errors";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageTitle("planExecution.title");
@@ -39,7 +42,43 @@ export default async function PlanPage() {
   if (!actor) redirect("/login");
 
   const t = await getTranslations("planExecution");
-  const status = await getProgramStatus(actor);
+  let loaded;
+  try {
+    const status = await getProgramStatus(actor);
+    loaded =
+      status.state === "none" || status.plan === null
+        ? { status, activity: null, maturity: null }
+        : {
+            status,
+            ...(await Promise.all([
+              getGovernanceActivity(actor, status),
+              // The LIVE reading, recalculated as actions complete — not the plan's frozen
+              // baseline. The board used to fetch this; moving the section moved the fetch with it.
+              getCurrentMaturity(actor),
+            ]).then(([activity, maturity]) => ({ activity, maturity }))),
+          };
+  } catch (error) {
+    // grc-api down or misrouted: say so on the page instead of failing the whole route.
+    if (!(error instanceof UpstreamError || error instanceof NotFoundError)) throw error;
+    const tDiscovery = await getTranslations("discoveryInterview");
+    return (
+      <div className="mx-auto max-w-4xl">
+        <Card className="flex flex-col items-start gap-3">
+          <p className="flex items-start gap-2 text-sm text-danger">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+            {t("loadError")}
+          </p>
+          <Link
+            href="/plan"
+            className="inline-flex h-9 items-center rounded-lg border border-hairline-strong bg-surface-elevated px-4 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-surface-2"
+          >
+            {tDiscovery("retry")}
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+  const { status, activity, maturity } = loaded;
 
   // No program yet: the status card is the whole page. `/discovery` is the way in, and sending
   // someone to a plan board with nothing on it would be the same empty dashboard in another shape.
@@ -51,12 +90,7 @@ export default async function PlanPage() {
     );
   }
 
-  const [activity, maturity] = await Promise.all([
-    getGovernanceActivity(actor, status),
-    // The LIVE reading, recalculated as actions complete — not the plan's frozen baseline. The
-    // board used to fetch this; moving the section moved the fetch with it.
-    getCurrentMaturity(actor),
-  ]);
+  if (activity === null || maturity === null) return null;
 
   return (
     <div className="mx-auto max-w-4xl space-y-5">
