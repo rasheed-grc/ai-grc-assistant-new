@@ -37,7 +37,7 @@ SYSTEM_PROMPT = (
     "invent, remove, merge, or reorder governance actions."
 )
 
-EXECUTIVE_BRIEF_PROMPT_ID = "governance_plan.executive_brief.v1"
+EXECUTIVE_BRIEF_PROMPT_ID = "governance_plan.executive_brief.v2"
 
 
 CORE_CONTEXT_HEADING = (
@@ -113,7 +113,8 @@ def executive_brief_prompt(context: str) -> str:
         "assessment, not a summary. If the data clearly points to one root cause behind several "
         "symptoms, say so explicitly (e.g. 'the underlying issue is X, which is driving Y and Z') "
         "rather than listing findings side by side. End with one sentence recommending what to "
-        "focus on first.\n\n"
+        "focus on first. Write plain prose only — no headings, no markdown, no bold or bullet "
+        "markers; it is displayed as-is.\n\n"
         f"{context}"
     )
 
