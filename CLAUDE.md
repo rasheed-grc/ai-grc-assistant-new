@@ -1080,8 +1080,9 @@ pnpm --filter @grc/web dev                                        # http://local
 
 In `apps/web/.env.local`, at minimum set:
 
-- `DATABASE_URL` — defaults to `postgresql://postgres:postgres@localhost:5432/aigrc`, which
-  matches the Docker Compose service above.
+- `DATABASE_URL` — `postgresql://grc:grc_local_password@localhost:5432/grc`, which is what the
+  Docker Compose service above creates (`.env.example`'s `postgres:postgres@…/aigrc` does not
+  match it).
 - `AUTH_SECRET` — any string ≥32 chars for local dev (`openssl rand -base64 48`).
 - `OPENAI_API_KEY` — needed for AI analysis/chat; without it the app falls back to a local,
   no-egress provider (limited, but the app still runs).
@@ -1090,17 +1091,36 @@ Everything else in `apps/web/.env.example` is optional for local testing (Resend
 Sentry, the separate `v2/apps/grc-api` integration, etc.) — each var documents in the file
 what breaks without it.
 
-### Test database & demo login
+### Test database & first login
 
-`pnpm --filter @grc/web db:migrate` both creates the schema **and** seeds a demo tenant
-("Acme Financial Group") with one account per role — see
-[`apps/web/lib/db/migrations/0012_organizations.sql`](apps/web/lib/db/migrations/0012_organizations.sql)
-and `apps/web/lib/auth/users.ts`. Log in at `/login` with any of:
+There is no demo password and no public signup: an account exists only once it is created. On a
+fresh local database, create your own first owner (fake values — use a `.test` address):
 
-`owner@acme.test`, `admin@acme.test`, `compliance@acme.test`, `risk@acme.test`,
-`analyst@acme.test`, `auditor@acme.test`, `viewer@acme.test` — password `GrcDemo!2026`.
+```bash
+pnpm --filter @grc/web db:create-admin -- --email you@local.test --password 'Local-Only-123!' \
+  --name "Local Owner" --org "Local Test Org"
+```
 
-These are fake, local-only seed credentials — never real user data.
+Log in at `http://localhost:3000/login` with it. More teammates arrive through Settings → Team →
+invite. Never create test accounts in a shared or production database.
+
+### The Governance Program backend (`grc-api`)
+
+The Governance Program (`/discovery`, `/plan`) and History (`/missions`) call a second service,
+`v2/apps/grc-api`. Without it those pages show "could not load" — every other page works. To run
+it locally against the same Docker Postgres:
+
+```bash
+docker exec -it $(docker ps -qf ancestor=pgvector/pgvector:pg16) psql -U grc -c 'CREATE DATABASE rasheed_v2;'
+cd v2/apps/grc-api && uv sync
+DATABASE_URL=postgresql://grc:grc_local_password@localhost:5432/rasheed_v2 uv run python -m grc_api.migrate
+DATABASE_URL=postgresql://grc:grc_local_password@localhost:5432/rasheed_v2 GRC_API_SERVICE_SECRET=<same as apps/web> \
+  uv run uvicorn grc_api.app:create_app --factory --port 8000
+```
+
+Set `GRC_API_BASE_URL=http://localhost:8000` and the same `GRC_API_SERVICE_SECRET` in
+`apps/web/.env.local`. Report generation also needs an AI provider for grc-api
+(`GRC_LLM_PROVIDER` + that provider's key); without one the report step fails.
 
 ### Running the tests
 
@@ -1110,6 +1130,9 @@ pnpm --filter @grc/web lint        # eslint
 pnpm --filter @grc/web test        # eval suites (tests/eval/*.ts)
 pnpm --filter @grc/web build       # production build (requires AUTH_SECRET)
 ```
+
+`pnpm test` includes suites that **write rows** to whatever `DATABASE_URL` in `.env.local`
+points at (they clean up after themselves, but still). Only run it against your local database.
 
 CI (`.github/workflows/ci.yml`) runs the equivalent gates on every PR — a PR cannot merge
 until these are green (§23).
