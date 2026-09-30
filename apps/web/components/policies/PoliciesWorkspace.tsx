@@ -323,6 +323,10 @@ function PolicyDetailModal({
   }
 
   const bodyValue = body ?? policy.body ?? "";
+  // A published policy is an approved one: changing or withdrawing it is the approver's call
+  // (mirrors lib/policies/service.ts).
+  const canEdit =
+    policy.status === "published" ? permissions.canPublish : permissions.canUpdate;
   const transitions = POLICY_TRANSITIONS[policy.status];
 
   async function doTransition(status: PolicyStatus) {
@@ -360,7 +364,7 @@ function PolicyDetailModal({
           <div className="flex items-center gap-2">
             {transitions.map((status) => {
               const isPublish = status === "published";
-              const allowed = isPublish ? permissions.canPublish : permissions.canUpdate;
+              const allowed = isPublish ? permissions.canPublish : canEdit;
               if (!allowed) return null;
               return (
                 <button
@@ -407,7 +411,7 @@ function PolicyDetailModal({
 
         <div>
           <FieldLabel>{t("bodyLabel")}</FieldLabel>
-          {permissions.canUpdate ? (
+          {canEdit ? (
             <>
               <textarea
                 value={bodyValue}
@@ -439,7 +443,7 @@ function PolicyDetailModal({
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <FieldLabel>{t("mappedControlsLabel")}</FieldLabel>
-            {permissions.canUpdate && !editingControls && (
+            {canEdit && !editingControls && (
               <button
                 type="button"
                 onClick={() => {

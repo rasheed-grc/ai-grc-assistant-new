@@ -77,6 +77,15 @@ export async function updatePolicy(
 ): Promise<Policy> {
   if (!can(actor.roles, "update", "policy"))
     throw new ForbiddenError("You are not permitted to edit policies.");
+  // A published policy still reads "published by <approver>"; only someone who could have approved
+  // it may change what that approval now covers.
+  const existing = await policyRepository.get(actor.tenantId, id);
+  if (!existing) throw new NotFoundError("Policy not found.");
+  if (existing.status === "published" && !can(actor.roles, "publish", "policy")) {
+    throw new ForbiddenError(
+      "Changing a published policy requires an Owner, Administrator, or Compliance Manager.",
+    );
+  }
   const updated = await policyRepository.update(actor.tenantId, id, (policy) => ({
     ...policy,
     title: input.title?.trim() || policy.title,
@@ -101,13 +110,16 @@ export async function transitionPolicy(
   if (!canTransition(policy.status, to)) {
     throw new ValidationError(`Cannot move a ${policy.status} policy to ${to}.`);
   }
-  // Publishing is the consequential gate: it requires the publish permission.
-  const action = to === "published" ? "publish" : "update";
+  // Publishing is the consequential gate: it requires the publish permission. So does taking a
+  // published policy back out (to draft or archive) — that withdraws an approval.
+  const action = to === "published" || policy.status === "published" ? "publish" : "update";
   if (!can(actor.roles, action, "policy")) {
     throw new ForbiddenError(
       to === "published"
         ? "Publishing a policy requires an Owner, Administrator, or Compliance Manager."
-        : "You are not permitted to change this policy.",
+        : policy.status === "published"
+          ? "Withdrawing a published policy requires an Owner, Administrator, or Compliance Manager."
+          : "You are not permitted to change this policy.",
     );
   }
   const updated = await policyRepository.update(actor.tenantId, id, (current) => ({

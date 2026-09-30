@@ -561,6 +561,10 @@ function RiskDetailModal({
     }
   }
 
+  // An accepted risk carries someone's sign-off; only a person who could accept it may change what
+  // was accepted (mirrors lib/risk/service.ts).
+  const canEdit = risk.status === "accepted" ? permissions.canAccept : permissions.canUpdate;
+
   async function setResidual(field: "residualLikelihood" | "residualImpact", value: number) {
     await update.mutateAsync({ id, patch: { [field]: value } });
   }
@@ -652,7 +656,7 @@ function RiskDetailModal({
               <span className="text-2xl font-semibold text-foreground">{inherent}</span>
               <SeverityBadge severity={severityOf(inherent)} score={inherent} />
             </div>
-            {permissions.canUpdate && (
+            {canEdit && (
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <label className="block">
                   <FieldLabel>{t("form.likelihood")}</FieldLabel>
@@ -692,7 +696,7 @@ function RiskDetailModal({
                 <span className="text-sm text-foreground-muted">{t("notAssessed")}</span>
               )}
             </div>
-            {permissions.canUpdate && (
+            {canEdit && (
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <label className="block">
                   <FieldLabel>{t("form.likelihood")}</FieldLabel>
@@ -717,7 +721,7 @@ function RiskDetailModal({
 
         <div>
           <FieldLabel>{t("form.mitigationPlan")}</FieldLabel>
-          {permissions.canUpdate ? (
+          {canEdit ? (
             <>
               <textarea
                 value={planValue}
