@@ -11,6 +11,10 @@ export const SESSION_COOKIE = "grc_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 8; // 8 hours
 
 export const LOGIN_PATH = "/login";
+
+/** Query flag on the login URL meaning "the cookie you hold is no longer a valid session". */
+export const STALE_SESSION_PARAM = "session";
+export const STALE_SESSION_VALUE = "ended";
 export const DEFAULT_AUTHENTICATED_PATH = "/dashboard";
 export const ACCESS_DENIED_PATH = "/access-denied";
 

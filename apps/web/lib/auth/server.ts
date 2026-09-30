@@ -8,7 +8,13 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
-import { ACCESS_DENIED_PATH, LOGIN_PATH, SESSION_COOKIE } from "./config";
+import {
+  ACCESS_DENIED_PATH,
+  LOGIN_PATH,
+  SESSION_COOKIE,
+  STALE_SESSION_PARAM,
+  STALE_SESSION_VALUE,
+} from "./config";
 import { can, type Action, type ResourceType } from "./permissions";
 import { isUserRole, type UserRole } from "./roles";
 import { organizationRepository } from "@/lib/organizations/repository";
@@ -56,8 +62,16 @@ export async function requireSession(nextPath?: string): Promise<SessionPayload>
   const session = await getSession();
   if (!session) {
     const locale = await getLocale();
-    const href = nextPath ? `${LOGIN_PATH}?next=${encodeURIComponent(nextPath)}` : LOGIN_PATH;
-    redirect({ href, locale });
+    const params = new URLSearchParams();
+    if (nextPath) params.set("next", nextPath);
+    // A signed cookie whose membership is gone (removed teammate, deleted organization) still
+    // passes the edge middleware, which would bounce /login straight back here forever. The flag
+    // tells the middleware to clear that cookie instead.
+    if ((await cookies()).get(SESSION_COOKIE)?.value) {
+      params.set(STALE_SESSION_PARAM, STALE_SESSION_VALUE);
+    }
+    const query = params.toString();
+    redirect({ href: query ? `${LOGIN_PATH}?${query}` : LOGIN_PATH, locale });
   }
   return session;
 }
