@@ -1847,6 +1847,7 @@
     "back": "Back",
     "submitting": "Saving…",
     "genericError": "Something went wrong. Please try again.",
+    "retry": "Try again",
     "resumeNotice": "Picking up where you left off.",
     "stage": {
       "general": "Getting to know your business",
@@ -2118,6 +2119,27 @@
       "vendor_review": "Vendor Review",
       "simple_question": "AI GRC Assistant"
     },
+    "step": {
+      "resolve_the_organization_s_applicability_analysis": "Analyse what applies to the organization",
+      "gather_the_relevant_framework_control_library": "Gather the relevant framework controls",
+      "draft_the_governance_plan_for_review": "Draft the governance plan for review",
+      "finalize_and_persist_the_approved_governance_plan": "Finalize and save the approved governance plan",
+      "identify_applicable_controls": "Identify applicable controls",
+      "identify_relevant_controls": "Identify relevant controls",
+      "identify_supplier_controls": "Identify supplier controls",
+      "gather_supporting_evidence": "Gather supporting evidence",
+      "gather_vendor_context": "Gather vendor context",
+      "gather_policy_guidance": "Gather policy guidance",
+      "compute_coverage_and_gaps": "Compute coverage and gaps",
+      "collect_relevant_context": "Collect relevant context",
+      "assess_the_risk": "Assess the risk",
+      "assess_the_vendor": "Assess the vendor",
+      "write_the_risk_report": "Write the risk report",
+      "draft_the_policy": "Draft the policy",
+      "answer_the_question": "Answer the question",
+      "list_the_iso_27001_controls_in_scope": "List the ISO 27001 controls in scope"
+    },
+    "technicalDetails": "Technical details",
     "historyHeading": "History",
     "catalog": {
       "heading": "Start a mission",
@@ -2163,6 +2185,12 @@
       "trust": {
         "evidence": "{count, plural, one {# evidence citation} other {# evidence citations}}",
         "humanReview": "Human review"
+      },
+      "humanReviewValue": {
+        "not_required": "Not required",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
       },
       "coverage": {
         "title": "Coverage — {framework}",

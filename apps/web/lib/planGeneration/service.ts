@@ -249,7 +249,21 @@ export async function getPendingPlanGeneration(
     "GET",
     `/v1/missions/${encodeURIComponent(pending.id)}`,
   );
-  return { missionId: pending.id, decisionId: detail.approval?.id ?? null, report: extractDraft(detail) };
+  let report: GovernanceReportDraft;
+  try {
+    report = extractDraft(detail);
+  } catch (error) {
+    // A draft nobody can read cannot be reviewed, so it is not something to resume into. Failing
+    // the whole check instead would strand the customer on every visit, behind a Mission they can
+    // neither approve nor get past; a fresh generation replaces it.
+    if (!(error instanceof UpstreamError)) throw error;
+    logger.warn("plan_generation_pending_draft_unreadable", {
+      missionId: pending.id,
+      reason: error.message,
+    });
+    return null;
+  }
+  return { missionId: pending.id, decisionId: detail.approval?.id ?? null, report };
 }
 
 /** Crosses the ADR 0044 human-approval gate — the ONE consequential step, persisting the plan as
