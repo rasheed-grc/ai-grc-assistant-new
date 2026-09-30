@@ -30,6 +30,7 @@ import type { PlanItem } from "@/lib/planExecution/types";
 import type { Risk } from "@/lib/risk/types";
 import type { Policy } from "@/lib/policies/types";
 import type { DocumentRecord } from "@/lib/documents/types";
+import { logger } from "@/lib/observability/logger";
 
 const MAX_OPEN_ITEMS = 5;
 const MAX_LISTED_DOCUMENTS = 15;
@@ -55,9 +56,15 @@ function formatDate(epochSeconds: number | null, locale: AppLocale): string {
 }
 
 function governanceSection(
-  status: Awaited<ReturnType<typeof getProgramStatus>>,
+  status: Awaited<ReturnType<typeof getProgramStatus>> | null,
   locale: AppLocale,
 ): string {
+  if (status === null) {
+    // Unknown is not "not started": the assistant must not tell someone with a plan that they have none.
+    return locale === "ar"
+      ? "برنامج الحوكمة: تعذّر الاطلاع على حالته حاليًا — لا تفترض أنه لم يبدأ، ووجّه المستخدم إلى صفحة برنامج الحوكمة."
+      : "Governance Program: its status is unavailable right now — do not assume it has not started; point the user to the Governance Program page.";
+  }
   if (status.state === "none" || status.plan === null) {
     return locale === "ar"
       ? "برنامج الحوكمة: لم يبدأ المستخدم هذا البرنامج بعد — لا توجد بيانات تقييم أو خطة."
@@ -255,13 +262,26 @@ async function missionsSection(actor: ActorContext, locale: AppLocale): Promise<
   }
 }
 
+/** The plan lives in grc-api, another service; its failing (unreachable, misconfigured, erroring)
+ * must never stop the assistant from answering — every message would otherwise fail with it. */
+async function safeProgramStatus(actor: ActorContext) {
+  try {
+    return await getProgramStatus(actor);
+  } catch (error) {
+    logger.warn("chat_program_status_unavailable", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 /**
  * Builds the compact, always-included organization context block. Every field is fetched
  * tenant-scoped through `actor` — nothing here can cross into another organization's data.
  */
 export async function buildOrganizationContext(actor: ActorContext, locale: AppLocale): Promise<string> {
   const [status, coverage, risks, policies, documents, missions] = await Promise.all([
-    getProgramStatus(actor),
+    safeProgramStatus(actor),
     computeCoverage(actor),
     listRisks(actor),
     policyRepository.list(actor.tenantId),
