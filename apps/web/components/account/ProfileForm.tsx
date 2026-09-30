@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, TriangleAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { useSession } from "@/components/auth/SessionProvider";
-import { ROLE_META, primaryRole } from "@/lib/auth/roles";
+import { primaryRole } from "@/lib/auth/roles";
 import { updateProfileName } from "@/lib/account/client";
 
 const inputClass =
@@ -19,6 +19,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 export function ProfileForm() {
   const t = useTranslations("profilePage");
+  const tRoles = useTranslations("teamManagement.roles");
   const { user } = useSession();
   const role = primaryRole(user.roles);
 
@@ -52,7 +53,7 @@ export function ProfileForm() {
           <p className="truncate text-xs text-foreground-muted">{user.email}</p>
           {role && (
             <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-2xs font-medium text-accent-foreground">
-              {ROLE_META[role].label}
+              {tRoles(role)}
             </span>
           )}
         </div>

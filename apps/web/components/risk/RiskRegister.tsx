@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, Plus, ShieldAlert, Trash2, TriangleAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
@@ -502,6 +502,7 @@ function RiskDetailModal({
   onClose: () => void;
 }) {
   const t = useTranslations("riskRegister");
+  const locale = useLocale();
   const { user } = useSession();
   const likelihoodLabels = t.raw("likelihoodLabels") as string[];
   const impactLabels = t.raw("impactLabels") as string[];
@@ -639,7 +640,7 @@ function RiskDetailModal({
           {risk.acceptedByName && (
             <span className="text-2xs text-warning">
               {t("acceptedBy", { name: risk.acceptedByName })}
-              {risk.acceptedAt ? ` · ${formatDate(risk.acceptedAt)}` : ""}
+              {risk.acceptedAt ? ` · ${formatDate(risk.acceptedAt, locale)}` : ""}
             </span>
           )}
         </div>

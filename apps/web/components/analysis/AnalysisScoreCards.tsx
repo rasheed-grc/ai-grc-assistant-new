@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ScoreRing } from "@/components/ui/ScoreRing";
 import type { AnalysisFinding, Severity } from "@/lib/analysis/types";
+import { MATURITY_LEVELS, type MaturityLevel } from "@/lib/analysis/scoring/types";
 import { cn } from "@/lib/utils";
 
 const SEVERITY_TONE: Record<Severity, "danger" | "warning" | "accent" | "neutral"> = {
@@ -50,7 +51,11 @@ export function AnalysisScoreCards({
         {maturityLevel && (
           <Badge tone="accent">
             <Gauge className="h-3 w-3" strokeWidth={2} />
-            {t("maturityLevel", { level: maturityLevel })}
+            {t("maturityLevel", {
+              level: (MATURITY_LEVELS as readonly string[]).includes(maturityLevel)
+                ? t(`maturityLevels.${maturityLevel as MaturityLevel}`)
+                : maturityLevel,
+            })}
           </Badge>
         )}
       </Card>

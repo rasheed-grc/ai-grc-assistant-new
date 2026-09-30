@@ -253,6 +253,18 @@ const EN: ReportLabels = {
     "The recommended next step is to complete the governance assessment to generate an action plan.",
 };
 
+/** An Arabic count with its noun in the right number: 1 and 2 are words, 3–10 take the plural,
+ *  11 and up the singular ("١١ مهمة"). */
+function arabicCount(
+  n: number,
+  forms: { one: string; two: string; few: string; many: string },
+): string {
+  if (n === 1) return forms.one;
+  if (n === 2) return forms.two;
+  const mod100 = n % 100;
+  return `${n} ${mod100 >= 3 && mod100 <= 10 ? forms.few : forms.many}`;
+}
+
 const AR: ReportLabels = {
   meta: {
     executive: {
@@ -374,13 +386,13 @@ const AR: ReportLabels = {
   governanceNotStarted:
     "لم تُكمل هذه المنشأة برنامج تقييم الحوكمة بعد — لا توجد خطة حوكمة نشطة حالياً.",
   governanceActive: (version, done, total) =>
-    `خطة الحوكمة (الإصدار ${version}) نشطة حالياً. من إجمالي ${total} مهمة، أُنجزت ${done} ومتبقٍ ${total - done}.`,
+    `خطة الحوكمة (الإصدار ${version}) نشطة حالياً. أُنجز ${done} من أصل ${arabicCount(total, { one: "مهمة واحدة", two: "مهمتين", few: "مهام", many: "مهمة" })}، ومتبقٍ ${total - done}.`,
   governanceReviewDue: "المراجعة الدورية لهذه الخطة مستحقة الآن.",
   governanceNextReview: (date) => `موعد المراجعة القادمة: ${date}.`,
   noPolicies: "لا توجد سياسات مسجلة لهذه المنشأة بعد.",
   noDocuments: "لم تُرفع أي مستندات لهذه المنشأة بعد.",
   documentsSummary: (total, processed) =>
-    `${total} مستندًا مرفوعًا إجمالاً، منها ${processed} تمت معالجته وأصبح قابلاً للاسترجاع ضمن إجابات المساعد الذكي.`,
+    `إجمالي المستندات المرفوعة: ${total}، منها ${processed} تمت معالجتها وأصبحت قابلة للاسترجاع ضمن إجابات المساعد الذكي.`,
   noOpenActionItems: "لا توجد مهام مفتوحة حالياً — جميع بنود خطة الحوكمة منجزة أو غير قابلة للتطبيق.",
   noKeyFindings: "لا توجد نتائج رئيسية مسجلة من التقييم الحالي.",
   noRecommendations: "لا توجد توصيات سياسات معلّقة حالياً.",

@@ -17,6 +17,16 @@ export async function updateProfileName(name: string): Promise<SessionUser> {
   return ((await response.json()) as { user: SessionUser }).user;
 }
 
+/** An Account API failure with the server's error `code`, so a form can phrase known ones itself. */
+export class AccountRequestError extends Error {
+  constructor(
+    message: string,
+    readonly code: string | null,
+  ) {
+    super(message);
+  }
+}
+
 export async function changeAccountPassword(
   currentPassword: string,
   newPassword: string,
@@ -26,5 +36,11 @@ export async function changeAccountPassword(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ currentPassword, newPassword }),
   });
-  if (!response.ok) throw new Error(await parseError(response));
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { error?: string; code?: string };
+    throw new AccountRequestError(
+      data.error ?? `Request failed (${response.status}).`,
+      data.code ?? null,
+    );
+  }
 }

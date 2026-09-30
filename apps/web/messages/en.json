@@ -1,6 +1,8 @@
 {
   "common": {
     "appName": "Rasheed",
+    "close": "Close",
+    "searchControls": "Search controls…",
     "language": "Language",
     "switchToArabic": "التبديل إلى العربية",
     "switchToEnglish": "Switch to English"
@@ -698,6 +700,8 @@
     "title": "Sign in to Rasheed",
     "subtitle": "Governance · Risk · Compliance · AI",
     "signInFailed": "Sign in failed. Please try again.",
+    "invalidCredentials": "Invalid email or password.",
+    "tooManyAttempts": "Too many attempts. Please try again shortly.",
     "networkError": "Network error. Please check your connection and try again.",
     "emailLabel": "Work email",
     "emailPlaceholder": "you@company.com",
@@ -885,7 +889,7 @@
     "openGapsLabel": "Open gaps",
     "openGapsDescription": "controls with no linked evidence",
     "evidenceArtifactsLabel": "Evidence artifacts",
-    "evidenceArtifactsSummary": "across {count} frameworks"
+    "evidenceArtifactsSummary": "across {count, plural, one {# framework} other {# frameworks}}"
   },
   "frameworksPage": {
     "eyebrow": "Governance",
@@ -988,9 +992,19 @@
       "auditor": "Auditor",
       "viewer": "Viewer"
     },
+    "roleDescriptions": {
+      "owner": "Full access to your organization: settings, team, data and approvals.",
+      "admin": "Full administrative access within the organization.",
+      "compliance_manager": "Runs the operational GRC lifecycle, including approvals and publishing.",
+      "risk_manager": "Owns the risk register end to end and can drive missions.",
+      "analyst": "Authors and executes operational work; cannot approve, publish, or delete.",
+      "auditor": "Read-only access to everything, including the audit trail.",
+      "viewer": "Read-only access to operational and catalog data."
+    },
     "modal": {
       "inviteTitle": "Invite a teammate",
-      "successTitle": "Invitation sent"
+      "successTitle": "Invitation sent",
+      "createdTitle": "Invitation created"
     },
     "form": {
       "email": "Work email",
@@ -1279,6 +1293,13 @@
     "risk": "Risk",
     "weightedAcrossFrameworks": "Weighted across resolved frameworks",
     "maturityLevel": "{level} maturity",
+    "maturityLevels": {
+      "Initial": "Initial",
+      "Developing": "Developing",
+      "Defined": "Defined",
+      "Managed": "Managed",
+      "Optimized": "Optimized"
+    },
     "findings": "Findings",
     "noFindings": "No findings recorded.",
     "severity": {
@@ -1555,6 +1576,7 @@
     "passwordLabel": "Password",
     "confirmPasswordLabel": "Confirm password",
     "passwordMismatch": "Passwords do not match.",
+    "passwordTooShort": "Your password must be at least 10 characters.",
     "submit": "Create account",
     "submitting": "Creating account…",
     "genericError": "Something went wrong. Please try again."
@@ -2049,6 +2071,7 @@
     "passwordLabel": "New password",
     "confirmPasswordLabel": "Confirm new password",
     "passwordMismatch": "Passwords do not match.",
+    "passwordTooShort": "Your password must be at least 10 characters.",
     "submit": "Reset password",
     "submitting": "Resetting…",
     "successMessage": "Your password has been reset. You can now sign in with your new password.",
@@ -2079,6 +2102,8 @@
     "newPasswordLabel": "New password",
     "confirmPasswordLabel": "Confirm new password",
     "passwordMismatch": "Passwords do not match.",
+    "passwordTooShort": "Your new password must be at least 10 characters.",
+    "currentPasswordIncorrect": "Your current password is incorrect.",
     "passwordChanged": "Your password has been changed.",
     "save": "Change password",
     "saving": "Saving…",

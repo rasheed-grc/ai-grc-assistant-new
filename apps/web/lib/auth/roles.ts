@@ -23,7 +23,7 @@ export interface RoleMeta {
 }
 
 export const ROLE_META: Record<UserRole, RoleMeta> = {
-  owner: { label: "Owner", description: "Full platform access across all tenants and resources." },
+  owner: { label: "Owner", description: "Full access to the organization: settings, team, data and approvals." },
   admin: { label: "Administrator", description: "Full administrative access within the tenant." },
   compliance_manager: {
     label: "Compliance Manager",

@@ -8,7 +8,7 @@ import { z } from "zod";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signSession } from "@/lib/auth/session";
 import type { SessionPayload } from "@/lib/auth/types";
-import { ValidationError } from "@/lib/errors";
+import { AppError, ValidationError } from "@/lib/errors";
 import { usersRepository } from "@/lib/users/repository";
 
 export const updateProfileSchema = z.object({
@@ -63,7 +63,8 @@ export async function changePassword(session: SessionPayload, input: unknown): P
 
   const currentOk = await verifyPassword(parsed.data.currentPassword, user.passwordHash);
   if (!currentOk) {
-    throw new ValidationError("Your current password is incorrect.");
+    // Its own code so the form can say it in the page's language.
+    throw new AppError(400, "Your current password is incorrect.", "current_password_incorrect");
   }
 
   const passwordHash = await hashPassword(parsed.data.newPassword);

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
@@ -25,6 +26,7 @@ export function Modal({
   footer,
   size = "md",
 }: ModalProps) {
+  const t = useTranslations("common");
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, open, onClose);
 
@@ -68,7 +70,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("close")}
             className="shrink-0 rounded-lg p-1 text-foreground-muted transition-colors duration-150 hover:bg-surface-elevated hover:text-foreground"
           >
             <X className="h-4 w-4" strokeWidth={1.75} />

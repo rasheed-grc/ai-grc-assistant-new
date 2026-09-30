@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download, FileText, Loader2, Sparkles, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -88,6 +88,7 @@ export function DocumentList({ canDelete }: DocumentListProps) {
 
 function DocumentRow({ doc, canDelete }: { doc: DocumentDto; canDelete: boolean }) {
   const t = useTranslations("documentList");
+  const locale = useLocale();
   const tCategory = useTranslations("documentCategories");
   const deleteMutation = useDeleteDocument();
   const [confirming, setConfirming] = useState(false);
@@ -113,7 +114,7 @@ function DocumentRow({ doc, canDelete }: { doc: DocumentDto; canDelete: boolean 
       </td>
       <td className="px-3 py-3 text-foreground-secondary">{formatBytes(doc.sizeBytes)}</td>
       <td className="px-3 py-3 text-foreground-secondary">{doc.uploadedByName}</td>
-      <td className="px-3 py-3 text-foreground-muted">{formatDate(doc.createdAt)}</td>
+      <td className="px-3 py-3 text-foreground-muted">{formatDate(doc.createdAt, locale)}</td>
       <td className="px-5 py-3">
         <div className="flex items-center justify-end gap-1">
           <Link
