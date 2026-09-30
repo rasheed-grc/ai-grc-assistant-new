@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/Card";
 import { getActor } from "@/lib/auth/actor";
 import { analysisRepository } from "@/lib/analysis/repository";
-import { computeCoverage } from "@/lib/governance/coverage";
+import { computeOrganizationCoverage } from "@/lib/governance/coverage";
 import { listRisks } from "@/lib/risk/service";
 
 function startOfMonth(date: Date): Date {
@@ -19,7 +19,7 @@ export async function StatCards() {
   if (!actor) return null;
 
   const [coverage, risks, analyses] = await Promise.all([
-    computeCoverage(actor),
+    computeOrganizationCoverage(actor),
     listRisks(actor),
     analysisRepository.listLatestPerDocument(actor.tenantId),
   ]);

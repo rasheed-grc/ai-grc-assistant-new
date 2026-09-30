@@ -209,7 +209,8 @@
     "complianceProgress": {
       "title": "Compliance Progress",
       "description": "Coverage vs. target by framework",
-      "target": "Target"
+      "target": "Target",
+      "empty": "No frameworks apply yet — complete the Governance Program or link evidence to controls to see them here."
     },
     "riskDistribution": {
       "title": "Risk Distribution",
