@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CalendarClock, ListChecks, Target, Zap } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge, type Tone } from "@/components/ui/Badge";
@@ -9,6 +9,8 @@ import { localisedTitle } from "@/lib/planExecution/localiseTitle";
 import { groupItems, isQuickWin } from "@/lib/planExecution/grouping";
 import type { Priority } from "@/lib/planExecution/types";
 import type { GovernanceReportItem } from "@/lib/planGeneration/types";
+import { formatCalendarDate } from "@/lib/preferences/format";
+import type { AppLocale } from "@/i18n/routing";
 
 const PRIORITY_TONE: Record<Priority, Tone> = {
   critical: "danger",
@@ -17,11 +19,9 @@ const PRIORITY_TONE: Record<Priority, Tone> = {
   low: "neutral",
 };
 
-function dueDate(dueAt: number | null): string | null {
+function dueDate(dueAt: number | null, locale: AppLocale): string | null {
   if (dueAt == null) return null;
-  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", timeZone: "UTC" }).format(
-    new Date(dueAt * 1000),
-  );
+  return formatCalendarDate(new Date(dueAt * 1000), locale);
 }
 
 /** Section 5 (ADR 0066 §4): small effort, high/critical urgency — no new logic, the same filter
@@ -131,6 +131,7 @@ export function TimelineSection({ items }: { items: GovernanceReportItem[] }) {
 export function ActionTasksSection({ items }: { items: GovernanceReportItem[] }) {
   const t = useTranslations("governanceReport");
   const seed = useTranslations("planSeed");
+  const locale = useLocale() as AppLocale;
   return (
     <Card>
       <div className="mb-3 flex items-center gap-2">
@@ -139,7 +140,7 @@ export function ActionTasksSection({ items }: { items: GovernanceReportItem[] })
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         {items.map((item) => {
-          const due = dueDate(item.dueAt);
+          const due = dueDate(item.dueAt, locale);
           return (
             <div key={item.id} className="rounded-lg border border-hairline p-3.5">
               <div className="flex flex-wrap items-center gap-1.5">

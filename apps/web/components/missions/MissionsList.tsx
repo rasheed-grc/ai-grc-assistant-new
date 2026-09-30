@@ -9,6 +9,7 @@ import { useMissions } from "@/hooks/useMissions";
 import { formatRelativeTime } from "@/lib/dashboard/relativeTime";
 import type { AppLocale } from "@/i18n/routing";
 import { isMissionStatus, type Mission, type MissionStatus } from "@/lib/missions/types";
+import { missionSubject } from "@/lib/missions/labels";
 import { labelOrIdentifier } from "@/lib/planExecution/labels";
 
 const STATUS_TONE: Record<MissionStatus, Tone> = {
@@ -37,21 +38,6 @@ function StatusBadge({ status, awaitingApproval }: { status: string; awaitingApp
   );
 }
 
-/**
- * An opaque identifier is not a subject.
- *
- * The engine's list carries the mission's `scope`, which for most types is the thing it ran
- * against ("Technological controls") and is worth showing. For a governance plan the scope is the
- * discovery session id — load-bearing for the mission, meaningless to the person reading the row.
- * Rather than teach this component about mission types, it hides what it can see is an id.
- */
-const OPAQUE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$|^[0-9a-f]{24,}$/i;
-
-function subjectOf(mission: Mission): string | null {
-  const scope = mission.scope.trim();
-  return scope && !OPAQUE_ID.test(scope) ? scope : null;
-}
-
 function MissionRow({ mission }: { mission: Mission }) {
   const t = useTranslations("missionsPage");
   const locale = useLocale() as AppLocale;
@@ -65,8 +51,8 @@ function MissionRow({ mission }: { mission: Mission }) {
           <p className="truncate font-medium text-foreground">
             {labelOrIdentifier(t as (key: string) => string, "missionType", mission.type)}
           </p>
-          {subjectOf(mission) && (
-            <p className="mt-0.5 truncate text-2xs text-foreground-muted">{subjectOf(mission)}</p>
+          {missionSubject(mission.scope) && (
+            <p className="mt-0.5 truncate text-2xs text-foreground-muted">{missionSubject(mission.scope)}</p>
           )}
         </Link>
       </td>

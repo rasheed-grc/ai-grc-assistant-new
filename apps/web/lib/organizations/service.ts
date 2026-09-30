@@ -184,3 +184,44 @@ export async function listOrganizationMembers(actor: ActorContext): Promise<Orga
     })),
   };
 }
+
+function assertCanManageTeam(actor: ActorContext): void {
+  if (!actor.roles.includes("owner") && !actor.roles.includes("admin")) {
+    throw new ForbiddenError("Only workspace owners and admins may manage the team.");
+  }
+}
+
+/**
+ * Removes a teammate from the caller's *current* organization (never a client-supplied one).
+ * Their account and any other organization they belong to are untouched; this org's data stays.
+ * Access ends immediately: `getSession()` re-checks membership on every request, so the removed
+ * person's still-signed cookie stops working at once instead of at expiry.
+ *
+ * Guards: owner/admin only; no removing yourself (leave by asking another owner); an admin cannot
+ * remove an owner; and the last owner can never be removed — an organization with nobody able to
+ * administer it is unrecoverable.
+ */
+export async function removeTeamMember(actor: ActorContext, targetUserId: string): Promise<void> {
+  assertCanManageTeam(actor);
+  if (targetUserId === actor.userId) {
+    throw new ValidationError("You can't remove yourself. Ask another owner to do it.");
+  }
+  const target = await organizationRepository.getMembership(targetUserId, actor.tenantId);
+  if (!target) throw new NotFoundError("That person is not a member of this organization.");
+  if (target.role === "owner") {
+    if (!actor.roles.includes("owner")) {
+      throw new ForbiddenError("Only an owner can remove another owner.");
+    }
+    if ((await organizationRepository.countMembersWithRole(actor.tenantId, "owner")) <= 1) {
+      throw new ValidationError("An organization must keep at least one owner.");
+    }
+  }
+  await organizationRepository.removeMember(targetUserId, actor.tenantId);
+}
+
+/** Cancels a still-open invitation in the caller's current organization. */
+export async function cancelInvitation(actor: ActorContext, invitationId: string): Promise<void> {
+  assertCanManageTeam(actor);
+  const revoked = await invitationRepository.revokePending(actor.tenantId, invitationId);
+  if (!revoked) throw new NotFoundError("That invitation is not open.");
+}

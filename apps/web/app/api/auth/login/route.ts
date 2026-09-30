@@ -6,6 +6,7 @@ import { checkRateLimit, resetRateLimit } from "@/lib/auth/rate-limit";
 import { signSession } from "@/lib/auth/session";
 import { toSessionUser, type SessionPayload } from "@/lib/auth/types";
 import { authRepository } from "@/lib/auth/users";
+import { preferencesRepository } from "@/lib/preferences/repository";
 
 // scrypt requires the Node.js runtime (not edge).
 export const runtime = "nodejs";
@@ -67,7 +68,14 @@ export async function POST(request: Request): Promise<NextResponse> {
   };
   const token = await signSession(payload);
 
-  const response = NextResponse.json({ user: toSessionUser(payload) });
+  // The saved language (Settings > Preferences) follows the person to any device; the login form
+  // navigates to it. A preferences read failing must never block signing in.
+  const preferredLocale = await preferencesRepository
+    .get(user.userId)
+    .then((p) => p.locale)
+    .catch(() => null);
+
+  const response = NextResponse.json({ user: toSessionUser(payload), locale: preferredLocale });
   response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions(SESSION_TTL_SECONDS));
   return response;
 }

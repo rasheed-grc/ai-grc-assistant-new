@@ -32,7 +32,6 @@ members = [
     "grc-persistence",
     "grc-persistence-web",
     "grc-plugins",
-    "grc-policy-builder",
     "grc-rag",
     "grc-regulation-ingestion",
     "grc-regulation-ingestion-adapters",
@@ -612,21 +611,6 @@ requires-dist = [
 name = "grc-plugins"
 version = "0.0.0"
 source = { editable = "packages/plugins" }
-
-[[package]]
-name = "grc-policy-builder"
-version = "0.0.0"
-source = { editable = "packages/policy-builder" }
-dependencies = [
-    { name = "grc-domain" },
-    { name = "grc-tools" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "grc-domain", editable = "packages/domain" },
-    { name = "grc-tools", editable = "packages/tools" },
-]
 
 [[package]]
 name = "grc-rag"

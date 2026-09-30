@@ -83,6 +83,10 @@ export function DiscoveryFlow() {
   const [report, setReport] = useState<GovernanceReportDraft | null>(null);
   const [approving, setApproving] = useState(false);
   const [approveError, setApproveError] = useState<string | null>(null);
+  // Set only when the REPORT failed. The interview behind it is already concluded and no longer
+  // resumable, so retrying must regenerate from that session — a reload would offer "Start" and
+  // make the customer answer every question again.
+  const [failedReportSessionId, setFailedReportSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,6 +203,7 @@ export function DiscoveryFlow() {
 
   const generateReport = useCallback(async (forSessionId: string) => {
     setPhase("analyzing");
+    setFailedReportSessionId(null);
     try {
       const response = await fetch("/api/plan-generation", {
         method: "POST",
@@ -213,6 +218,7 @@ export function DiscoveryFlow() {
       setReport(data.report);
       setPhase("report");
     } catch {
+      setFailedReportSessionId(forSessionId);
       setPhase("error");
     }
   }, []);
@@ -293,6 +299,10 @@ export function DiscoveryFlow() {
     try {
       const response = await fetch(`/api/discovery/sessions/${sessionId}/back`, { method: "POST" });
       if (!response.ok) {
+        // 404 is grc-api's "no earlier question" — a resumed session cannot know it is on the first
+        // question until it asks, so the button goes away rather than staying a dead control.
+        if (response.status === 404) setCanGoBack(false);
+        else setErrorMessage(t("genericError"));
         setSubmitting(false);
         return;
       }
@@ -302,8 +312,9 @@ export function DiscoveryFlow() {
       setSubmitting(false);
     } catch {
       setSubmitting(false);
+      setErrorMessage(t("genericError"));
     }
-  }, [sessionId]);
+  }, [sessionId, t]);
 
   const approve = useCallback(async () => {
     if (!missionId || !decisionId) return;
@@ -361,11 +372,23 @@ export function DiscoveryFlow() {
 
   if (phase === "error") {
     return (
-      <Card>
+      <Card className="flex flex-col items-start gap-3">
         <div className="flex items-start gap-2 text-sm text-danger">
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
           <span>{t("genericError")}</span>
         </div>
+        {/* Otherwise a reload re-runs the resume logic above, landing the customer where they were. */}
+        <button
+          type="button"
+          onClick={() =>
+            failedReportSessionId
+              ? void generateReport(failedReportSessionId)
+              : window.location.reload()
+          }
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-hairline-strong bg-surface-elevated px-4 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-surface-2"
+        >
+          {t("retry")}
+        </button>
       </Card>
     );
   }

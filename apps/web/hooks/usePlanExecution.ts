@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   attachPlanItemEvidence,
@@ -37,14 +38,25 @@ export function usePlanItemEvents(itemId: string | null) {
   });
 }
 
+/** The sections above the board (status, "what to do next", activity, evidence, maturity) are
+ * Server Components: query invalidation never reaches them, so without a refresh they keep
+ * counting a completed step as remaining until the page is reloaded. */
+function useRefreshServerSections() {
+  const router = useRouter();
+  return () => router.refresh();
+}
+
 /** Any item status transition moves both the plan (item list) and the live maturity
  * recalculation (ADR 0066 §5.3) — invalidate both together so the UI never shows a stale score
  * next to a status that has already changed. */
 function useInvalidatePlanAndMaturity() {
   const queryClient = useQueryClient();
+  const refreshServerSections = useRefreshServerSections();
   return () => {
     void queryClient.invalidateQueries({ queryKey: PLAN_KEY });
     void queryClient.invalidateQueries({ queryKey: MATURITY_KEY });
+    void queryClient.invalidateQueries({ queryKey: ["governancePlan", "events"] });
+    refreshServerSections();
   };
 }
 
@@ -74,12 +86,15 @@ export function useReopenPlanItem() {
 
 export function useAttachPlanItemEvidence() {
   const queryClient = useQueryClient();
+  const refreshServerSections = useRefreshServerSections();
   return useMutation<PlanItem, Error, { itemId: string; evidenceIds: string[] }>({
     mutationFn: ({ itemId, evidenceIds }) => attachPlanItemEvidence(itemId, evidenceIds),
     onSuccess: () => {
       // Evidence never changes status/maturity (ADR 0066 §5.4) — only the item list needs a
       // refresh, not the maturity recalculation.
       void queryClient.invalidateQueries({ queryKey: PLAN_KEY });
+      void queryClient.invalidateQueries({ queryKey: ["governancePlan", "events"] });
+      refreshServerSections();
     },
   });
 }

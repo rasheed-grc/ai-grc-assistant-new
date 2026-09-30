@@ -19,6 +19,9 @@ export interface InvitationRepository {
     organizationId: string,
     email: string,
   ): Promise<Invitation | null>;
+  /** Cancels an OPEN invite (its link stops working). False when there was no such open invite
+   * in this organization — used already, expired, or someone else's. */
+  revokePending(organizationId: string, invitationId: string): Promise<boolean>;
 }
 
 interface InvitationRow {
@@ -106,6 +109,15 @@ class PostgresInvitationRepository implements InvitationRepository {
       [organizationId, email],
     );
     return rows[0] ? toInvitation(rows[0]) : null;
+  }
+
+  async revokePending(organizationId: string, invitationId: string): Promise<boolean> {
+    const { rowCount } = await getPool().query(
+      `DELETE FROM invitations
+        WHERE id = $1 AND organization_id = $2 AND used_at IS NULL`,
+      [invitationId, organizationId],
+    );
+    return (rowCount ?? 0) > 0;
   }
 }
 

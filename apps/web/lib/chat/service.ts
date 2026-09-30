@@ -224,6 +224,13 @@ function buildMessages(
         "tailor your answer to this organization specifically (its actual open tasks, policies, risk " +
         "count, coverage, documents on file) rather than answering generically; when a section of the " +
         "organization context says nothing is recorded yet, say so plainly instead of guessing. " +
+        "The organization context also states who is asking, their role, and what that role can and " +
+        "cannot do — answer questions about the user's own permissions from it, never assume. " +
+        "You are text only: NEVER promise an action, a deadline or a follow-up (e.g. 'we will do " +
+        "this within 2 business days', 'I can onboard these sources'), and never offer capabilities " +
+        "this product does not have. You may only point the user to what exists: uploading documents, " +
+        "the Governance Program, Policies (Analyze Policy Needs), Gap/Risk Assessment missions, " +
+        "Reports, and Team — and tell them to do it themselves. " +
         "(3) 'Regulatory sources' — real excerpts from the national regulatory corpus (laws, " +
         "executive regulations, government guides, standards, etc.), each already labeled with its " +
         "source TYPE and its APPROVAL STATUS; cite these with an R-marker, e.g. [R1] or [R2], never " +

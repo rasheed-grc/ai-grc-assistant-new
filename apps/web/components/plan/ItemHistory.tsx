@@ -1,13 +1,16 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { usePlanItemEvents } from "@/hooks/usePlanExecution";
+import { formatCalendarDate } from "@/lib/preferences/format";
+import type { AppLocale } from "@/i18n/routing";
 
 /** The audit trail for one item (ADR 0066 §5.3, Phase 3 hardening) — proves a completion has (or
  * doesn't have) a matching event, in the order it actually happened. */
 export function ItemHistory({ itemId }: { itemId: string }) {
   const t = useTranslations("planExecution");
+  const locale = useLocale() as AppLocale;
   const { data: events, isLoading } = usePlanItemEvents(itemId);
 
   if (isLoading) {
@@ -33,13 +36,12 @@ export function ItemHistory({ itemId }: { itemId: string }) {
               : event.eventType}
           </span>
           <span className="text-foreground-muted">
-            {new Intl.DateTimeFormat("en-GB", {
+            {formatCalendarDate(new Date(event.createdAt * 1000), locale, {
               day: "2-digit",
               month: "short",
               hour: "2-digit",
               minute: "2-digit",
-              timeZone: "UTC",
-            }).format(new Date(event.createdAt * 1000))}
+            })}
           </span>
         </li>
       ))}

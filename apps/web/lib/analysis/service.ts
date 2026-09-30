@@ -94,6 +94,12 @@ export async function listAnalysisVersions(
   documentId: string,
 ): Promise<AnalysisRecord[]> {
   assertRead(actor);
+  // A document that is not this organization's is "not found", exactly like every other document
+  // route — an empty list would be a 200 that quietly confirms nothing while answering a question
+  // about a resource the caller has no business asking about.
+  if (!(await documentRepository.get(actor.tenantId, documentId))) {
+    throw new NotFoundError("Document not found.");
+  }
   await reconcileStaleAnalyses(actor.tenantId);
   return analysisRepository.listVersions(actor.tenantId, documentId);
 }

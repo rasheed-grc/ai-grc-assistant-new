@@ -6,6 +6,8 @@ import {
   LOGIN_PATH,
   PUBLIC_MARKETING_PATHS,
   SESSION_COOKIE,
+  STALE_SESSION_PARAM,
+  STALE_SESSION_VALUE,
 } from "@/lib/auth/config";
 import { verifySessionToken } from "@/lib/auth/session";
 
@@ -54,6 +56,13 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     url.search = "";
     url.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(url);
+  }
+
+  if (session && isLoginRoute && request.nextUrl.searchParams.get(STALE_SESSION_PARAM) === STALE_SESSION_VALUE) {
+    // The server already rejected this cookie (see requireSession); the edge can only check its
+    // signature, so bouncing to the dashboard here would loop. Show the login page and drop it.
+    intlResponse.cookies.delete(SESSION_COOKIE);
+    return intlResponse;
   }
 
   if (session && isLoginRoute) {

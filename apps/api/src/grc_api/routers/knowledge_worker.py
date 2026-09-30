@@ -9,7 +9,7 @@ role gets a 403 on every route. Consequential control (reschedule, enable/disabl
 trigger) is therefore admin-only in the sense that matters — no non-admin role can ever
 mutate worker state.
 
-Like Policy Intelligence (PI-P5, ADR-0022), this router talks directly to
+Like the regulation-review surface, this router talks directly to
 ``grc_persistence_web`` repositories against apps/web's live schema rather than the
 gated command/query bus: the worker's state (`worker_control`/`worker_run_history`/
 `worker_events`) is platform-scope, not a tenant-owned aggregate, the same reasoning

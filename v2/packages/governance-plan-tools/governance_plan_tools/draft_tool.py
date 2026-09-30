@@ -249,7 +249,9 @@ class PlanDraftTool:
         """The last generation failure, for the warning that reports the fallback."""
         return getattr(self, "_last_error", None) or "no reason recorded"
 
-    def _generate(self, prompt: str, language: Language) -> str | None:
+    def _generate(
+        self, prompt: str, language: Language, max_output_tokens: int = 900
+    ) -> str | None:
         request = LLMRequest(
             family=PromptFamily.TOOL,
             workflow="governance_plan_draft",
@@ -286,7 +288,7 @@ class PlanDraftTool:
             # token-heavier per sentence than English, so longer items were cut off mid-response,
             # right after starting the final label. `_parse_labeled_lines` now also strips a
             # dangling partial-label fragment defensively, but the real fix is headroom.
-            params={"temperature": 0.3, "max_output_tokens": 900},
+            params={"temperature": 0.3, "max_output_tokens": max_output_tokens},
         )
         try:
             return self._provider.generate(request).text
@@ -314,7 +316,11 @@ class PlanDraftTool:
             + prompts.core_context_block(core)
             + prompts.sector_context_block(sector)
         )
-        text = self._generate(prompts.executive_brief_prompt(context), language)
+        # The brief is the longest single piece of prose in the draft, and Arabic spends more tokens
+        # per sentence: at the shared 900 it was stored cut off mid-sentence.
+        text = self._generate(
+            prompts.executive_brief_prompt(context), language, max_output_tokens=2000
+        )
         if not text:
             warnings.append(f"executive_brief: generation failed ({self._why()}), used fallback")
             return _FALLBACK_EXECUTIVE_BRIEF

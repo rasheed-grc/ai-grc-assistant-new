@@ -55,6 +55,13 @@ def start_session(
     tenant: Annotated[TenantContext, Depends(require_tenant)],
     service: Annotated[DiscoverySessionService, Depends(get_discovery_service)],
 ) -> DiscoveryTurnResponse:
+    # At most one interview in flight per tenant. Starting while one is already `in_progress`
+    # used to leave an orphaned duplicate behind (and `active` kept serving the older one), so a
+    # second "start" resumes the existing session instead — the same one `GET .../active` returns.
+    resumed = service.resume(tenant.tenant_id)
+    if resumed is not None:
+        session, question = resumed
+        return _turn_response(session.id, session.status, question)
     session, question = service.start(tenant.tenant_id)
     return _turn_response(session.id, session.status, question)
 

@@ -33,7 +33,9 @@ from __future__ import annotations
 
 import contextlib
 import enum
+import logging
 import os
+import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
@@ -101,14 +103,19 @@ class Tables:
 # commit/rollback no-ops and would silently destroy the atomicity it exists to provide. Mixing the
 # two modes in one pool would hand a command a connection that cannot be transactional.
 #
+LOGGER = logging.getLogger(__name__)
+
 # Sizes are per PROCESS. Total connections = instances x workers x (POOL_MAX x 2), which must stay
 # under the database's cap with headroom for migrations and human access — see the production
 # architecture doc.
 POOL_MIN_SIZE = int(os.environ.get("DB_POOL_MIN_SIZE", "1"))
 POOL_MAX_SIZE = int(os.environ.get("DB_POOL_MAX_SIZE", "5"))
 # A caller that waits longer than this gets an error instead of hanging: a request queued forever
-# on a pool is indistinguishable from a hung service, and it will trip a health probe.
-POOL_TIMEOUT_SECONDS = float(os.environ.get("DB_POOL_TIMEOUT", "10"))
+# on a pool is indistinguishable from a hung service, and it will trip a health probe. 30s, not
+# 10: a launch keeps its connection for the whole of an execution (minutes of LLM calls), so a few
+# missions running at once legitimately queue the next request for a while — that is contention to
+# wait out, not an outage to report.
+POOL_TIMEOUT_SECONDS = float(os.environ.get("DB_POOL_TIMEOUT", "30"))
 POOL_APPLICATION_NAME = "grc-api"
 
 _pools: dict[bool, Any] = {}
@@ -180,10 +187,69 @@ def close_pools() -> None:
         pool.close()
 
 
+# A launch holds ONE connection for a whole execution, and an execution is dominated by LLM calls
+# that can take minutes. A managed pooler (Supabase's Supavisor) reaps sessions that sit idle, so
+# the next `save` after a slow step used to hit a dead socket: the mission was left `resumed`
+# forever and the caller got a 502 even though the step's work had already been done. Every
+# statement on this connection is autocommit — self-contained — so replacing a dead connection
+# and repeating the statement is safe.
+_IDLE_RECHECK_SECONDS = 10.0
+
+
+class _ResilientConnection(_PooledConnection):
+    """An autocommit pooled connection that survives being reaped while idle.
+
+    Before the first statement after a quiet spell it checks the session is alive (`SELECT 1`);
+    a statement that still fails on a broken connection is retried once on a fresh one. The
+    frozen engine and stores above need no change — they only ever call `execute`/`cursor`.
+    """
+
+    def __init__(self, pool: Any, connection: Any) -> None:
+        super().__init__(pool, connection)
+        self._last_used = time.monotonic()
+
+    def _replace(self) -> None:
+        import psycopg
+
+        try:
+            self._pool.putconn(self._connection)  # broken → the pool discards it
+        except psycopg.Error:
+            pass
+        self._connection = self._pool.getconn()
+
+    def _ensure_alive(self) -> None:
+        import psycopg
+
+        if time.monotonic() - self._last_used >= _IDLE_RECHECK_SECONDS:
+            try:
+                self._connection.execute("SELECT 1")
+            except psycopg.Error:
+                LOGGER.warning("db_connection_replaced: idle connection was dropped by the server")
+                self._replace()
+        self._last_used = time.monotonic()
+
+    def execute(self, *args: Any, **kwargs: Any) -> Any:
+        import psycopg
+
+        self._ensure_alive()
+        try:
+            return self._connection.execute(*args, **kwargs)
+        except (psycopg.OperationalError, psycopg.InterfaceError):
+            LOGGER.warning("db_statement_retried: connection broke mid-statement")
+            self._replace()
+            return self._connection.execute(*args, **kwargs)
+
+    def cursor(self, *args: Any, **kwargs: Any) -> Any:
+        self._ensure_alive()
+        return self._connection.cursor(*args, **kwargs)
+
+
 def open_autocommit_connection() -> Any:
     """A fresh autocommit connection to the V2 database — the seam the durable launch opens its own
-    connection through, so execution never borrows the command's."""
-    return _connect(autocommit=True)
+    connection through, so execution never borrows the command's. Resilient to being reaped while
+    a long LLM step keeps it idle (see `_ResilientConnection`)."""
+    pool = _pool(autocommit=True)
+    return _ResilientConnection(pool, pool.getconn())
 
 
 # --- reads: a service that holds configuration, never a store -----------------------------

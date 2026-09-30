@@ -39,6 +39,7 @@
 23. Way of Working (Workflow)
 24. Definition of Done
 25. Glossary
+26. Getting Started (Local Development & Partner Onboarding)
 
 ---
 
@@ -1047,6 +1048,121 @@ is not Done.
   tenant scoping enforced at every layer.
 - **Workspace** — The structured, object-centric environment where users run and steer
   missions — the primary UX, with chat as one tool inside it.
+
+---
+
+## 26. Getting Started (Local Development & Partner Onboarding)
+
+This section is the practical companion to everything above: how to get the product
+running on your machine. It does not restate the architecture — read §3–§5 for that.
+
+**What you'll actually run.** This is a large monorepo with several generations of work
+(`v2/`, `v3/`, `devteam/`) that are internal platform/architecture tracks governed by their
+own ADRs — you do not need them to see or test the product. The live, running application
+is **`apps/web`** (Next.js 15 + PostgreSQL/pgvector), which is what a browser hits. Start
+and stay there unless a task explicitly sends you elsewhere.
+
+### Prerequisites
+
+- Node **22** (see `.nvmrc`) + `pnpm`
+- Docker (for local Postgres + pgvector)
+- Python 3.12 / `uv` — only needed if you touch the Python packages, not for `apps/web`
+
+### Run it locally
+
+```bash
+pnpm install
+docker compose -f docker/compose/docker-compose.deps.yml up -d   # Postgres + pgvector
+cp apps/web/.env.example apps/web/.env.local                     # then fill in the values below
+pnpm --filter @grc/web db:migrate                                 # creates the schema + seeds the demo tenant
+pnpm --filter @grc/web dev                                        # http://localhost:3000
+```
+
+In `apps/web/.env.local`, at minimum set:
+
+- `DATABASE_URL` — `postgresql://grc:grc_local_password@localhost:5432/grc`, which is what the
+  Docker Compose service above creates (`.env.example`'s `postgres:postgres@…/aigrc` does not
+  match it).
+- `AUTH_SECRET` — any string ≥32 chars for local dev (`openssl rand -base64 48`).
+- `OPENAI_API_KEY` — needed for AI analysis/chat; without it the app falls back to a local,
+  no-egress provider (limited, but the app still runs).
+
+Everything else in `apps/web/.env.example` is optional for local testing (Resend email,
+Sentry, the separate `v2/apps/grc-api` integration, etc.) — each var documents in the file
+what breaks without it.
+
+### Test database & first login
+
+There is no demo password and no public signup: an account exists only once it is created. On a
+fresh local database, create your own first owner (fake values — use a `.test` address):
+
+```bash
+pnpm --filter @grc/web db:create-admin -- --email you@local.test --password 'Local-Only-123!' \
+  --name "Local Owner" --org "Local Test Org"
+```
+
+Log in at `http://localhost:3000/login` with it. More teammates arrive through Settings → Team →
+invite. Never create test accounts in a shared or production database.
+
+### The Governance Program backend (`grc-api`)
+
+The Governance Program (`/discovery`, `/plan`) and History (`/missions`) call a second service,
+`v2/apps/grc-api`. Without it those pages show "could not load" — every other page works. To run
+it locally against the same Docker Postgres:
+
+```bash
+docker exec -it $(docker ps -qf ancestor=pgvector/pgvector:pg16) psql -U grc -c 'CREATE DATABASE rasheed_v2;'
+cd v2/apps/grc-api && uv sync
+DATABASE_URL=postgresql://grc:grc_local_password@localhost:5432/rasheed_v2 uv run python -m grc_api.migrate
+DATABASE_URL=postgresql://grc:grc_local_password@localhost:5432/rasheed_v2 GRC_API_SERVICE_SECRET=<same as apps/web> \
+  uv run uvicorn grc_api.app:create_app --factory --port 8000
+```
+
+Set `GRC_API_BASE_URL=http://localhost:8000` and the same `GRC_API_SERVICE_SECRET` in
+`apps/web/.env.local`. Report generation also needs an AI provider for grc-api
+(`GRC_LLM_PROVIDER` + that provider's key); without one the report step fails.
+
+### Running the tests
+
+```bash
+pnpm --filter @grc/web typecheck   # tsc --noEmit
+pnpm --filter @grc/web lint        # eslint
+pnpm --filter @grc/web test        # eval suites (tests/eval/*.ts)
+pnpm --filter @grc/web build       # production build (requires AUTH_SECRET)
+```
+
+`pnpm test` includes suites that **write rows** to whatever `DATABASE_URL` in `.env.local`
+points at (they clean up after themselves, but still). Only run it against your local database.
+
+CI (`.github/workflows/ci.yml`) runs the equivalent gates on every PR — a PR cannot merge
+until these are green (§23).
+
+### Deploying (النشر)
+
+[`RELEASE_PROCESS.md`](RELEASE_PROCESS.md) is the full, concrete playbook — environments
+(Production/Preview/local), the Vercel setup, branch protection, how to test and apply a
+database migration safely, and what to do if a deploy goes wrong. Short version: branch →
+PR → CI green → review → merge to `main` → Vercel deploys `main` to Production
+automatically → apply any migration to production by hand right after (§4 of that doc).
+Nobody pushes to `main` directly.
+
+### What not to touch
+
+- **No real data, ever.** Never point a local `.env.local` at a production database, and
+  never commit one — `.env*` is gitignored everywhere in this repo (`!.env.example` is the
+  only exception). If you're unsure whether a database is "real," don't connect to it.
+- **Don't push to `main` directly.** Every change goes through a PR (§23) — branch, commit,
+  push, open a PR.
+- **Don't touch CI/CD, deploy config, or secrets** (`.github/workflows/`, Vercel project
+  settings, production environment variables) without asking first.
+- **`v2/`, `v3/`, and `devteam/` are separate tracks**, each with its own frozen core and
+  ADR-gated change process (see their own READMEs/ADRs) — not where product/UI bug fixes
+  belong, and not to be modified casually.
+- **Don't merge code you can't explain** (§23) — this applies equally to AI-assisted
+  changes from either of us.
+
+If something here goes stale (a script renames, a port changes), fix this section in the
+same PR that changes the underlying thing — don't let them drift apart.
 
 ---
 

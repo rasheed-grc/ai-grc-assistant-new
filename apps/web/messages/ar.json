@@ -42,7 +42,14 @@
   "notifications": {
     "title": "الإشعارات",
     "empty": "لا توجد إشعارات بعد.",
-    "menuLabel": "الإشعارات"
+    "menuLabel": "الإشعارات",
+    "menuLabelUnread": "الإشعارات، {count} غير مقروء",
+    "loadError": "تعذّر تحميل الإشعارات.",
+    "category": {
+      "approvals": "مهمة بانتظار موافقتك",
+      "missionFailures": "فشلت إحدى المهام",
+      "team": "دعوة ما زالت معلّقة"
+    }
   },
   "orgSwitcher": {
     "switcherTrigger": "تبديل المنشأة",
@@ -1001,7 +1008,14 @@
     "copy": "نسخ",
     "copied": "تم النسخ",
     "emailSent": "تم إرسال بريد الدعوة إلى {email}.",
-    "emailNotSent": "تعذّر إرسال بريد الدعوة — شارك الرابط أعلاه بدلاً من ذلك."
+    "emailNotSent": "تعذّر إرسال بريد الدعوة — شارك الرابط أعلاه بدلاً من ذلك.",
+    "removeMember": "إزالة {name}",
+    "cancelInvite": "إلغاء الدعوة الموجّهة إلى {email}",
+    "removeModal": {
+      "title": "إزالة عضو من الفريق",
+      "body": "سيفقد {name} الوصول إلى هذه المنشأة فورًا. لا يتأثر حسابه ولا أي منشآت أخرى ينتمي إليها.",
+      "confirm": "إزالة"
+    }
   },
   "policyRecommendations": {
     "title": "توصيات السياسات",
@@ -1833,6 +1847,7 @@
     "back": "رجوع",
     "submitting": "جارٍ الحفظ…",
     "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "retry": "إعادة المحاولة",
     "resumeNotice": "نكمل من حيث توقفتم.",
     "stage": {
       "general": "التعرف على نشاطكم",
@@ -2104,6 +2119,27 @@
       "vendor_review": "مراجعة المورّدين",
       "simple_question": "مساعد الحوكمة الذكي"
     },
+    "step": {
+      "resolve_the_organization_s_applicability_analysis": "تحليل ما ينطبق على المنشأة",
+      "gather_the_relevant_framework_control_library": "جمع الضوابط ذات الصلة من الأطر",
+      "draft_the_governance_plan_for_review": "صياغة خطة الحوكمة للمراجعة",
+      "finalize_and_persist_the_approved_governance_plan": "اعتماد خطة الحوكمة وحفظها",
+      "identify_applicable_controls": "تحديد الضوابط المنطبقة",
+      "identify_relevant_controls": "تحديد الضوابط ذات الصلة",
+      "identify_supplier_controls": "تحديد ضوابط المورّد",
+      "gather_supporting_evidence": "جمع الأدلة الداعمة",
+      "gather_vendor_context": "جمع معلومات المورّد",
+      "gather_policy_guidance": "جمع الإرشادات الخاصة بالسياسة",
+      "compute_coverage_and_gaps": "احتساب التغطية والفجوات",
+      "collect_relevant_context": "جمع السياق ذي الصلة",
+      "assess_the_risk": "تقييم المخاطر",
+      "assess_the_vendor": "تقييم المورّد",
+      "write_the_risk_report": "كتابة تقرير المخاطر",
+      "draft_the_policy": "صياغة السياسة",
+      "answer_the_question": "الإجابة عن السؤال",
+      "list_the_iso_27001_controls_in_scope": "حصر ضوابط ISO 27001 ضمن النطاق"
+    },
+    "technicalDetails": "التفاصيل التقنية",
     "historyHeading": "السجل",
     "catalog": {
       "heading": "ابدأ مهمة",
@@ -2147,8 +2183,14 @@
       "resultLoading": "جارٍ تحميل النتيجة…",
       "resultLoadError": "تعذّر تحميل النتيجة الآن.",
       "trust": {
-        "evidence": "{count, plural, one {استشهاد دليل واحد} other {# استشهادات أدلة}}",
+        "evidence": "{count, plural, zero {لا توجد استشهادات أدلة} one {استشهاد دليل واحد} other {# استشهادات أدلة}}",
         "humanReview": "المراجعة البشرية"
+      },
+      "humanReviewValue": {
+        "not_required": "غير مطلوبة",
+        "pending": "بانتظار القرار",
+        "approved": "تمت الموافقة",
+        "rejected": "مرفوضة"
       },
       "coverage": {
         "title": "التغطية — {framework}",
@@ -2371,7 +2413,8 @@
       "profile": "الملف الشخصي",
       "security": "الأمان",
       "organization": "المنشأة",
-      "team": "الفريق"
+      "team": "الفريق",
+      "preferences": "التفضيلات"
     },
     "readOnlyBadge": "(للعرض فقط)"
   },
@@ -2387,5 +2430,33 @@
     "loading": "جارٍ تحميل بيانات المنشأة…",
     "loadError": "حدث خطأ أثناء تحميل بيانات المنشأة. حاول مرة أخرى.",
     "genericError": "حدث خطأ ما. حاول مرة أخرى."
+  },
+  "preferences": {
+    "title": "التفضيلات",
+    "subtitle": "تنطبق على حسابك فقط، على جميع أجهزتك.",
+    "loadError": "تعذّر تحميل تفضيلاتك.",
+    "saved": "تم الحفظ.",
+    "language": "اللغة",
+    "languageOption": {
+      "ar": "العربية",
+      "en": "English"
+    },
+    "timezone": "المنطقة الزمنية",
+    "timezoneHint": "تُعرض التواريخ والأوقات التي تراها بهذه المنطقة الزمنية.",
+    "notifications": "الإشعارات",
+    "category": {
+      "approvals": {
+        "label": "الموافقات",
+        "hint": "المهام التي تنتظر موافقتك."
+      },
+      "missionFailures": {
+        "label": "إخفاق المهام",
+        "hint": "المهام التي فشلت خلال آخر 14 يومًا."
+      },
+      "team": {
+        "label": "دعوات الفريق",
+        "hint": "الدعوات التي ما زالت معلّقة (للمالكين والمشرفين)."
+      }
+    }
   }
 }

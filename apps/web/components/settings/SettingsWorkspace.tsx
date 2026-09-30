@@ -2,19 +2,21 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Building2, Shield, User, UsersRound } from "lucide-react";
+import { Building2, Shield, SlidersHorizontal, User, UsersRound } from "lucide-react";
 import { useSession } from "@/components/auth/SessionProvider";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { SecurityAccessForm } from "@/components/account/SecurityAccessForm";
+import { PreferencesForm } from "@/components/settings/PreferencesForm";
 import { OrganizationForm } from "@/components/settings/OrganizationForm";
 import { TeamManagement } from "@/components/settings/TeamManagement";
 import { cn } from "@/lib/utils";
 
-const TABS = ["profile", "security", "organization", "team"] as const;
+const TABS = ["profile", "preferences", "security", "organization", "team"] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_ICON: Record<Tab, typeof User> = {
   profile: User,
+  preferences: SlidersHorizontal,
   security: Shield,
   organization: Building2,
   team: UsersRound,
@@ -28,11 +30,8 @@ const TAB_ICON: Record<Tab, typeof User> = {
  * see who else has access and what the organization is — matching `listOrganizationMembers`'s own
  * "any member may view, only owner/admin may change" split.
  *
- * Deliberately absent: Notifications and general "Preferences" (locale/timezone) tabs. Neither has
- * a real backend today — no notification-preferences schema, no per-user locale/timezone column —
- * and CLAUDE.md is explicit that a setting only belongs here once it is functional, never as a
- * clickable-but-dead placeholder (see `components/navigation/UserMenu.tsx`'s own comment to the
- * same effect).
+ * Preferences (language, time zone, notification categories) are per-user and persisted in
+ * `user_preferences`; each one is honored by the app, not just stored.
  */
 export function SettingsWorkspace() {
   const t = useTranslations("settingsWorkspace");
@@ -70,6 +69,7 @@ export function SettingsWorkspace() {
 
       <div className="max-w-lg">
         {tab === "profile" && <ProfileForm />}
+        {tab === "preferences" && <PreferencesForm />}
         {tab === "security" && <SecurityAccessForm />}
         {tab === "organization" && <OrganizationForm />}
       </div>

@@ -18,6 +18,10 @@ import { getTranslations } from "next-intl/server";
 import type { ActorContext } from "@/lib/auth/actor";
 import { getProgramStatus } from "@/lib/planExecution/programStatus";
 import { computeCoverage } from "@/lib/governance/coverage";
+import { can } from "@/lib/auth/permissions";
+import { ROLE_META, primaryRole } from "@/lib/auth/roles";
+import { listMissions } from "@/lib/missions/service";
+import { toRiskSummary } from "@/lib/risk/types";
 import { listRisks } from "@/lib/risk/service";
 import { policyRepository } from "@/lib/policies/repository";
 import { documentRepository } from "@/lib/documents/repository";
@@ -26,6 +30,7 @@ import type { PlanItem } from "@/lib/planExecution/types";
 import type { Risk } from "@/lib/risk/types";
 import type { Policy } from "@/lib/policies/types";
 import type { DocumentRecord } from "@/lib/documents/types";
+import { logger } from "@/lib/observability/logger";
 
 const MAX_OPEN_ITEMS = 5;
 const MAX_LISTED_DOCUMENTS = 15;
@@ -51,9 +56,15 @@ function formatDate(epochSeconds: number | null, locale: AppLocale): string {
 }
 
 function governanceSection(
-  status: Awaited<ReturnType<typeof getProgramStatus>>,
+  status: Awaited<ReturnType<typeof getProgramStatus>> | null,
   locale: AppLocale,
 ): string {
+  if (status === null) {
+    // Unknown is not "not started": the assistant must not tell someone with a plan that they have none.
+    return locale === "ar"
+      ? "برنامج الحوكمة: تعذّر الاطلاع على حالته حاليًا — لا تفترض أنه لم يبدأ، ووجّه المستخدم إلى صفحة برنامج الحوكمة."
+      : "Governance Program: its status is unavailable right now — do not assume it has not started; point the user to the Governance Program page.";
+  }
   if (status.state === "none" || status.plan === null) {
     return locale === "ar"
       ? "برنامج الحوكمة: لم يبدأ المستخدم هذا البرنامج بعد — لا توجد بيانات تقييم أو خطة."
@@ -74,7 +85,14 @@ function governanceSection(
         `${status.plan.items.filter(isOpen).length} of ${status.plan.items.length} tasks open.` +
         (status.state === "reviewDue" ? " A periodic review is due now." : "");
 
-  if (openItems.length === 0) return header;
+  const doneItems = status.plan.items.filter((item) => item.status === "done").slice(0, MAX_OPEN_ITEMS);
+  const doneBlock =
+    doneItems.length === 0
+      ? ""
+      : `\n${locale === "ar" ? "المهام المنجزة:" : "Completed tasks:"}\n` +
+        doneItems.map((item) => `  - ${item.title}`).join("\n");
+
+  if (openItems.length === 0) return `${header}${doneBlock}`;
 
   const lines = openItems.map((item) =>
     locale === "ar"
@@ -82,7 +100,7 @@ function governanceSection(
       : `  - [${item.priority}] ${item.title} — due ${formatDate(item.dueAt, locale)}`,
   );
 
-  return `${header}\n${lines.join("\n")}`;
+  return `${header}\n${lines.join("\n")}${doneBlock}`;
 }
 
 function policiesSection(policies: Policy[], locale: AppLocale): string {
@@ -94,9 +112,13 @@ function policiesSection(policies: Policy[], locale: AppLocale): string {
     byStatus.set(policy.status, (byStatus.get(policy.status) ?? 0) + 1);
   }
   const breakdown = [...byStatus.entries()].map(([status, count]) => `${status}: ${count}`).join(", ");
+  const titles = policies
+    .slice(0, 8)
+    .map((p) => `  - ${p.title} (${p.status})`)
+    .join("\n");
   return locale === "ar"
-    ? `السياسات: ${policies.length} سياسة إجمالاً (${breakdown}).`
-    : `Policies: ${policies.length} total (${breakdown}).`;
+    ? `السياسات: ${policies.length} سياسة إجمالاً (${breakdown}).\n${titles}`
+    : `Policies: ${policies.length} total (${breakdown}).\n${titles}`;
 }
 
 function risksSection(risks: Risk[], locale: AppLocale): string {
@@ -104,9 +126,15 @@ function risksSection(risks: Risk[], locale: AppLocale): string {
     return locale === "ar" ? "المخاطر: لا توجد مخاطر مسجلة لهذه المنشأة بعد." : "Risks: none recorded for this organization yet.";
   }
   const open = risks.filter((r) => r.status === "open" || r.status === "mitigating").length;
+  const top = risks
+    .map(toRiskSummary)
+    .sort((a, b) => b.inherentScore - a.inherentScore)
+    .slice(0, 5)
+    .map((r) => `  - ${r.title} (${r.severity}, ${r.status})`)
+    .join("\n");
   return locale === "ar"
-    ? `المخاطر: ${risks.length} خطرًا إجمالاً، منها ${open} مفتوح أو قيد المعالجة.`
-    : `Risks: ${risks.length} total, ${open} open or under mitigation.`;
+    ? `المخاطر: ${risks.length} خطرًا إجمالاً، منها ${open} مفتوح أو قيد المعالجة. الأعلى درجة:\n${top}`
+    : `Risks: ${risks.length} total, ${open} open or under mitigation. Highest scoring:\n${top}`;
 }
 
 /**
@@ -176,26 +204,103 @@ function coverageSection(
   return (locale === "ar" ? "تغطية الأطر:" : "Framework coverage:") + `\n${lines.join("\n")}`;
 }
 
+/** Who is asking, and what they may do — so "can I publish this policy?" or "what's my role?" is
+ * answered from the real permission matrix (`lib/auth/permissions.ts`, the same one the server
+ * enforces), never guessed. */
+function identitySection(actor: ActorContext, locale: AppLocale): string {
+  const role = primaryRole(actor.roles);
+  const roleLabel = role ? ROLE_META[role].label : "none";
+  const isAdmin = actor.roles.includes("owner") || actor.roles.includes("admin");
+  const abilities: Array<[boolean, string, string]> = [
+    [can(actor.roles, "create", "policy"), "create/edit policies", "إنشاء وتحرير السياسات"],
+    [can(actor.roles, "publish", "policy"), "publish policies", "نشر السياسات"],
+    [can(actor.roles, "create", "risk"), "record and edit risks", "تسجيل المخاطر وتحريرها"],
+    [can(actor.roles, "create", "evidence"), "upload documents/evidence", "رفع المستندات والأدلة"],
+    [can(actor.roles, "delete", "evidence"), "delete documents", "حذف المستندات"],
+    [can(actor.roles, "read", "report"), "view and export reports", "عرض التقارير وتصديرها"],
+    [can(actor.roles, "execute", "mission"), "run missions", "تشغيل المهام"],
+    [isAdmin, "invite team members and edit organization details", "دعوة أعضاء الفريق وتعديل بيانات المنشأة"],
+  ];
+  const allowed = abilities.filter(([ok]) => ok).map(([, en, ar]) => (locale === "ar" ? ar : en));
+  const denied = abilities.filter(([ok]) => !ok).map(([, en, ar]) => (locale === "ar" ? ar : en));
+  return locale === "ar"
+    ? `المنشأة: ${actor.organizationName}. المستخدم: ${actor.userName}، الدور: ${roleLabel}.\n` +
+        `  - يستطيع: ${allowed.join("، ") || "—"}\n  - لا يستطيع: ${denied.join("، ") || "—"}`
+    : `Organization: ${actor.organizationName}. User: ${actor.userName}, role: ${roleLabel}.\n` +
+        `  - Can: ${allowed.join(", ") || "—"}\n  - Cannot: ${denied.join(", ") || "—"}`;
+}
+
+/** Reports are generated on demand, so what the assistant can honestly say about them is what they
+ * would contain right now — the same headline numbers the Executive report opens with. */
+function reportsSection(
+  coverage: Awaited<ReturnType<typeof computeCoverage>>,
+  risks: Risk[],
+  policies: Policy[],
+  locale: AppLocale,
+): string {
+  const open = risks.filter((r) => r.status === "open" || r.status === "mitigating").length;
+  const published = policies.filter((p) => p.status === "published").length;
+  return locale === "ar"
+    ? `التقارير: التقرير التنفيذي وتقرير الامتثال وتقرير المخاطر تُنشأ عند الطلب من صفحة التقارير (PDF/Excel). ` +
+        `لقطة حالية: تغطية الامتثال ${coverage.overall.coveragePct}%، فجوات الضوابط ${coverage.overall.gaps}، ` +
+        `مخاطر مفتوحة ${open}، سياسات معتمدة ${published}.`
+    : `Reports: the Executive, Compliance and Risk reports are generated on demand from the Reports page ` +
+        `(PDF/Excel). Current snapshot: compliance coverage ${coverage.overall.coveragePct}%, ` +
+        `control gaps ${coverage.overall.gaps}, open risks ${open}, published policies ${published}.`;
+}
+
+/** Recent missions (Gap/Risk Assessments etc.). The Mission Engine lives in another service, so its
+ * being unreachable must never take the assistant down — the section is simply omitted then. */
+async function missionsSection(actor: ActorContext, locale: AppLocale): Promise<string | null> {
+  try {
+    const missions = (await listMissions(actor)).slice(0, 5);
+    if (missions.length === 0) return null;
+    const lines = missions.map((m) => `  - ${m.type}: ${m.scope} (${m.status})`).join("\n");
+    return (locale === "ar" ? "المهام الأخيرة:\n" : "Recent missions:\n") + lines;
+  } catch {
+    return null;
+  }
+}
+
+/** The plan lives in grc-api, another service; its failing (unreachable, misconfigured, erroring)
+ * must never stop the assistant from answering — every message would otherwise fail with it. */
+async function safeProgramStatus(actor: ActorContext) {
+  try {
+    return await getProgramStatus(actor);
+  } catch (error) {
+    logger.warn("chat_program_status_unavailable", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 /**
  * Builds the compact, always-included organization context block. Every field is fetched
  * tenant-scoped through `actor` — nothing here can cross into another organization's data.
  */
 export async function buildOrganizationContext(actor: ActorContext, locale: AppLocale): Promise<string> {
-  const [status, coverage, risks, policies, documents] = await Promise.all([
-    getProgramStatus(actor),
+  const [status, coverage, risks, policies, documents, missions] = await Promise.all([
+    safeProgramStatus(actor),
     computeCoverage(actor),
     listRisks(actor),
     policyRepository.list(actor.tenantId),
     documentRepository.list(actor.tenantId),
+    missionsSection(actor, locale),
   ]);
 
   const documentsBlock = await documentsSection(documents, locale);
 
   return [
+    identitySection(actor, locale),
     governanceSection(status, locale),
     policiesSection(policies, locale),
     risksSection(risks, locale),
     documentsBlock,
     coverageSection(coverage, locale),
-  ].join("\n\n");
+    reportsSection(coverage, risks, policies, locale),
+    missions,
+  ]
+    .filter((section): section is string => section !== null)
+    .join("\n\n");
 }

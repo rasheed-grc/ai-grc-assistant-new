@@ -84,3 +84,17 @@ export async function inviteTeamMember(
   if (!response.ok) throw new Error(await parseError(response));
   return (await response.json()) as InviteTeamMemberResponse;
 }
+
+export async function removeTeamMember(userId: string): Promise<void> {
+  const response = await fetch(`/api/organizations/members/${encodeURIComponent(userId)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+}
+
+export async function cancelTeamInvitation(invitationId: string): Promise<void> {
+  const response = await fetch(`/api/organizations/invitations/${encodeURIComponent(invitationId)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+}

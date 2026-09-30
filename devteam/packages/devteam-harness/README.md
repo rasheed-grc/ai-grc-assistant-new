@@ -119,7 +119,7 @@ in **English and Arabic**, at **desktop and mobile** widths:
 
 Dashboard · Risk Register · Documents · Evidence · Policies · Frameworks · Notifications ·
 User Management · Organizations (members, invitations) · Password Reset · Access Requests ·
-Missions · Governance Plan · Discovery · Reports · Policy Intelligence · Regulation Review · Chat
+Missions · Governance Plan · Discovery · Reports · Regulation Review · Chat
 
 ## Determinism
 

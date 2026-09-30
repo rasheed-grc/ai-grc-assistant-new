@@ -13,6 +13,7 @@ import { Badge, type Tone } from "@/components/ui/Badge";
 import { useMission, useMissionResult, useRunMission } from "@/hooks/useMissions";
 import { isMissionStatus, type MissionStatus } from "@/lib/missions/types";
 import { labelOrIdentifier } from "@/lib/planExecution/labels";
+import { isStructuredOutput, missionSubject, stepKey, stepLabel } from "@/lib/missions/labels";
 import { cn } from "@/lib/utils";
 
 const STATUS_TONE: Record<MissionStatus, Tone> = {
@@ -38,6 +39,7 @@ function StepRow({
   state: "done" | "running" | "pending";
   summary?: string;
 }) {
+  const t = useTranslations("missionsPage");
   return (
     <div className="flex items-start gap-3 border-b border-hairline py-3 last:border-0">
       <span
@@ -65,7 +67,18 @@ function StepRow({
         >
           {description}
         </p>
-        {summary && <p className="mt-1 whitespace-pre-wrap text-xs text-foreground-secondary">{summary}</p>}
+        {summary &&
+          (isStructuredOutput(summary) ? (
+            // Kept reachable for the audit trail (CLAUDE.md §19), not put in front of the reader.
+            <details className="mt-1 text-xs text-foreground-muted">
+              <summary className="cursor-pointer select-none">{t("technicalDetails")}</summary>
+              <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-md bg-surface-2 p-2 font-mono text-2xs" dir="ltr">
+                {summary}
+              </pre>
+            </details>
+          ) : (
+            <p className="mt-1 whitespace-pre-wrap text-xs text-foreground-secondary">{summary}</p>
+          ))}
       </div>
     </div>
   );
@@ -111,7 +124,8 @@ export function MissionWorkspace({ missionId }: { missionId: string }) {
               {labelOrIdentifier(t as (key: string) => string, "missionType", mission.type)}
             </p>
             <h2 className="mt-1 truncate text-base font-semibold text-foreground">
-              {mission.scope}
+              {missionSubject(mission.scope) ??
+                labelOrIdentifier(t as (key: string) => string, "missionType", mission.type)}
             </h2>
           </div>
           <Badge tone={tone} dot={mission.awaitingApproval}>
@@ -167,7 +181,7 @@ export function MissionWorkspace({ missionId }: { missionId: string }) {
               <StepRow
                 key={step.id}
                 index={index}
-                description={step.description}
+                description={stepLabel(t, step.description)}
                 state={state}
                 summary={finding?.summary}
               />
@@ -195,6 +209,7 @@ export function MissionWorkspace({ missionId }: { missionId: string }) {
 
 function MissionResultCard({ missionId }: { missionId: string }) {
   const t = useTranslations("missionsPage.detail");
+  const tPage = useTranslations("missionsPage");
   const { data: result, isLoading, isError } = useMissionResult(missionId, true);
 
   if (isLoading) {
@@ -231,7 +246,8 @@ function MissionResultCard({ missionId }: { missionId: string }) {
           {t("trust.evidence", { count: result.evidenceCount })}
         </div>
         <div className="text-xs text-foreground-secondary">
-          {t("trust.humanReview")}: {result.humanReview}
+          {t("trust.humanReview")}:{" "}
+          {labelOrIdentifier(t as (key: string) => string, "humanReviewValue", stepKey(result.humanReview))}
         </div>
       </div>
 
@@ -278,11 +294,20 @@ function MissionResultCard({ missionId }: { missionId: string }) {
         {result.sections.map((section, i) => (
           <div key={i}>
             <h4 className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">
-              {section.heading}
+              {stepLabel(tPage, section.heading)}
             </h4>
-            <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground-secondary">
-              {section.body}
-            </p>
+            {isStructuredOutput(section.body) ? (
+              <details className="mt-1.5 text-xs text-foreground-muted">
+                <summary className="cursor-pointer select-none">{tPage("technicalDetails")}</summary>
+                <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-md bg-surface-2 p-2 font-mono text-2xs" dir="ltr">
+                  {section.body}
+                </pre>
+              </details>
+            ) : (
+              <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground-secondary">
+                {section.body}
+              </p>
+            )}
             {section.citations.length > 0 && (
               <p className="mt-1.5 text-2xs text-foreground-muted">
                 {t("citations")}: {section.citations.join(", ")}

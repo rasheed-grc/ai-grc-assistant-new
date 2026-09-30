@@ -23,6 +23,7 @@ concern, reached only from behind this seam and never from a command.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from typing import Any, Protocol
 
@@ -31,9 +32,13 @@ from mission_engine import MissionEngine, MissionStatus
 from mission_store import OutboxSink, PostgresMissionStore
 from pipeline_contracts import TenantContext
 
+LOGGER = logging.getLogger(__name__)
+
 # States from which "launch" means *begin the plan* vs *continue past an approved gate*. A launch
 # on any other state is a no-op: nothing to start (already running, or terminal).
 _STARTABLE = frozenset({MissionStatus.CREATED, MissionStatus.PLANNED})
+# States in which a mission is being driven; one of these with no driver alive is a stuck mission.
+_IN_FLIGHT = frozenset({MissionStatus.EXECUTING, MissionStatus.RESUMED})
 
 
 class MissionLaunchPort(Protocol):
@@ -122,9 +127,36 @@ class DurableMissionLaunch:
                 ALL_EVENTS, OutboxSink(connection=connection, table=self._outbox_table).write
             )
             engine = MissionEngine(store, self._executor, events=capture)
-            driven = _drive_reloaded(engine, mission)
+            try:
+                driven = _drive_reloaded(engine, mission)
+            except Exception:
+                # Anything the resilient connection could not absorb. The one outcome that must
+                # never happen is a mission left `executing`/`resumed` forever with nobody running
+                # it: settle it as failed, on a fresh connection, then let the error surface.
+                LOGGER.exception("mission_launch_failed: mission_id=%s", mission_id)
+                self._settle_as_failed(mission_id, tenant)
+                raise
             # Execution is a write; it projects its result — on THIS connection, so the read model
             # reflects the finished mission and never goes stale behind the launch boundary.
             self._project(connection, driven)
         finally:
             connection.close()
+
+    def _settle_as_failed(self, mission_id: str, tenant: TenantContext) -> None:
+        try:
+            recovery = self._connect()
+        except Exception:  # noqa: BLE001 - no database at all; nothing more can be recorded
+            LOGGER.exception("mission_settle_failed: could not open a connection: %s", mission_id)
+            return
+        try:
+            store = PostgresMissionStore(connection=recovery, table=self._missions_table)
+            mission = store.get(mission_id, tenant)
+            if mission is None or mission.status not in _IN_FLIGHT:
+                return
+            mission.fail("execution was interrupted")
+            store.save(mission)
+            self._project(recovery, mission)
+        except Exception:  # noqa: BLE001 - recovery is best effort; never mask the original error
+            LOGGER.exception("mission_settle_failed: mission_id=%s", mission_id)
+        finally:
+            recovery.close()
